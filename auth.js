@@ -77,12 +77,14 @@ function showTab(tab) {
     const userForm = document.getElementById('userLoginForm');
     const adminForm = document.getElementById('adminLoginForm');
     const signupForm = document.getElementById('signupForm');
+    const adminSignupForm = document.getElementById('adminSignupForm');
     const tabs = document.querySelectorAll('.tab-btn');
 
     // Reset all forms
     userForm.classList.remove('active');
     adminForm.classList.remove('active');
     signupForm.classList.remove('active');
+    adminSignupForm?.classList.remove('active');
     tabs.forEach(t => t.classList.remove('active'));
 
     // Show selected tab
@@ -102,6 +104,13 @@ function showSignup() {
     document.querySelectorAll('.tab-btn').forEach(t => t.classList.remove('active'));
 }
 
+function showAdminSignup() {
+    const forms = document.querySelectorAll('.login-form');
+    forms.forEach(f => f.classList.remove('active'));
+    document.getElementById('adminSignupForm').classList.add('active');
+    document.querySelectorAll('.tab-btn').forEach(t => t.classList.remove('active'));
+}
+
 function showLogin() {
     showTab('user');
 }
@@ -109,17 +118,17 @@ function showLogin() {
 // User Login
 document.getElementById('userLoginForm')?.addEventListener('submit', async function(e) {
     e.preventDefault();
-    const email = document.getElementById('userEmail').value;
+    const emailOrUsername = document.getElementById('userEmailOrUsername').value;
     const password = document.getElementById('userPassword').value;
 
-    if (email && password) {
+    if (emailOrUsername && password) {
         try {
             const response = await fetch('http://localhost:3000/api/login', {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json'
                 },
-                body: JSON.stringify({ email, password })
+                body: JSON.stringify({ emailOrUsername, password })
             });
             
             const result = await response.json();
@@ -148,17 +157,17 @@ document.getElementById('userLoginForm')?.addEventListener('submit', async funct
 // Admin Login
 document.getElementById('adminLoginForm')?.addEventListener('submit', async function(e) {
     e.preventDefault();
-    const username = document.getElementById('adminUsername').value;
+    const emailOrUsername = document.getElementById('adminEmailOrUsername').value;
     const password = document.getElementById('adminPassword').value;
 
-    if (username && password) {
+    if (emailOrUsername && password) {
         try {
             const response = await fetch('http://localhost:3000/api/admin/login', {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json'
                 },
-                body: JSON.stringify({ username, password })
+                body: JSON.stringify({ emailOrUsername, password })
             });
             
             const result = await response.json();
@@ -215,6 +224,55 @@ document.getElementById('signupForm')?.addEventListener('submit', async function
                 window.location.href = 'dashboard.html';
             } else {
                 showModal('Error', result.message || 'Unable to create account', 'error');
+            }
+        } catch (error) {
+            showModal('Error', 'Unable to connect to server. Please make sure the server is running.', 'error');
+        }
+    } else {
+        showModal('Error', 'Please fill in all fields', 'error');
+    }
+});
+
+// Admin Signup
+document.getElementById('adminSignupForm')?.addEventListener('submit', async function(e) {
+    e.preventDefault();
+    const department = document.getElementById('adminSignupDepartment').value;
+    const email = document.getElementById('adminSignupEmail').value;
+    const name = document.getElementById('adminSignupName').value;
+    const username = document.getElementById('adminSignupUsername').value;
+    const password = document.getElementById('adminSignupPassword').value;
+    const confirmPassword = document.getElementById('adminSignupConfirmPassword').value;
+
+    if (department && email && name && username && password && confirmPassword) {
+        // Check if passwords match
+        if (password !== confirmPassword) {
+            showModal('Error', 'Passwords do not match', 'error');
+            return;
+        }
+        
+        // Validate government email
+        if (!email.endsWith('@gov.in')) {
+            showModal('Error', 'Admin email must be a valid government email ending with @gov.in', 'error');
+            return;
+        }
+        
+        try {
+            const response = await fetch('http://localhost:3000/api/admin/signup', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({ department, email, name, username, password })
+            });
+            
+            const result = await response.json();
+            
+            if (result.success) {
+                showModal('Success', 'Admin account created successfully! Please login.', 'success', function() {
+                    showTab('admin');
+                });
+            } else {
+                showModal('Error', result.message || 'Unable to create admin account', 'error');
             }
         } catch (error) {
             showModal('Error', 'Unable to connect to server. Please make sure the server is running.', 'error');

@@ -80,20 +80,41 @@ app.post('/api/signup', async (req, res) => {
 // User Login
 app.post('/api/login', async (req, res) => {
     try {
-        const { email, password } = req.body;
+        const { email, emailOrUsername, password } = req.body;
 
         // Validate inputs exist
-        if (!email || !password) {
-            return res.status(400).json({ success: false, message: 'Email and password are required' });
+        if (!(email || emailOrUsername) || !password) {
+            return res.status(400).json({ success: false, message: 'Email/Username and password are required' });
         }
 
-        // Find user by email and password
-        const userRef = db.collection('users').where('email', '==', email).where('password', '==', password);
-        const userSnapshot = await userRef.get();
+        // Try to find user by either email or name
+        let userSnapshot;
+        if (email) {
+            userSnapshot = await db.collection('users')
+                .where('email', '==', email)
+                .where('password', '==', password)
+                .limit(1)
+                .get();
+        } else {
+            // try by email first, then by name
+            userSnapshot = await db.collection('users')
+                .where('email', '==', emailOrUsername)
+                .where('password', '==', password)
+                .limit(1)
+                .get();
+
+            if (userSnapshot.empty) {
+                userSnapshot = await db.collection('users')
+                    .where('name', '==', emailOrUsername)
+                    .where('password', '==', password)
+                    .limit(1)
+                    .get();
+            }
+        }
 
         if (!userSnapshot.empty) {
             const user = userSnapshot.docs[0].data();
-            res.json({
+            return res.json({
                 success: true,
                 message: 'Login successful',
                 user: {
@@ -103,11 +124,64 @@ app.post('/api/login', async (req, res) => {
                     type: 'user'
                 }
             });
-        } else {
-            res.status(401).json({ success: false, message: 'Invalid email or password' });
         }
+
+        return res.status(401).json({ success: false, message: 'Invalid email or password' });
     } catch (error) {
         console.error('Login error:', error);
+        res.status(500).json({ success: false, message: 'Internal server error' });
+    }
+});
+
+// Admin Registration
+app.post('/api/admin/signup', async (req, res) => {
+    try {
+        const { department, email, name, username, password } = req.body;
+
+        // Validate inputs
+        if (!department || !email || !name || !username || !password) {
+            return res.status(400).json({ success: false, message: 'All fields are required' });
+        }
+
+        // Validate government email domain
+        if (!email.endsWith('@gov.in')) {
+            return res.status(400).json({ success: false, message: 'Admin email must be a valid government email ending with @gov.in' });
+        }
+
+        // Check if username or email already exists
+        const usernameSnap = await db.collection('admins').where('username', '==', username).get();
+        if (!usernameSnap.empty) {
+            return res.status(400).json({ success: false, message: 'Username already taken' });
+        }
+
+        const emailSnap = await db.collection('admins').where('email', '==', email).get();
+        if (!emailSnap.empty) {
+            return res.status(400).json({ success: false, message: 'Email already registered' });
+        }
+
+        // Get next admin ID
+        const adminsSnapshot = await db.collection('admins').orderBy('id', 'desc').limit(1).get();
+        let nextId = 1;
+        if (!adminsSnapshot.empty) {
+            nextId = adminsSnapshot.docs[0].data().id + 1;
+        }
+
+        const newAdmin = {
+            id: nextId,
+            department,
+            name,
+            username,
+            email,
+            password,
+            type: 'admin',
+            createdAt: new Date().toISOString()
+        };
+
+        await db.collection('admins').doc(nextId.toString()).set(newAdmin);
+
+        res.json({ success: true, message: 'Admin account created successfully', admin: { id: newAdmin.id, username, email } });
+    } catch (error) {
+        console.error('Admin signup error:', error);
         res.status(500).json({ success: false, message: 'Internal server error' });
     }
 });
@@ -115,31 +189,44 @@ app.post('/api/login', async (req, res) => {
 // Admin Login
 app.post('/api/admin/login', async (req, res) => {
     try {
-        const { username, password } = req.body;
-        
+        const { email, emailOrUsername, username, password } = req.body;
+
         // Validate inputs exist
-        if (!username || !password) {
-            return res.status(400).json({ success: false, message: 'Username and password are required' });
+        if (!(email || emailOrUsername || username) || !password) {
+            return res.status(400).json({ success: false, message: 'Email/Username/Username and password are required' });
         }
-        
-        // Find admin by username and password
-        const adminRef = db.collection('admins').where('username', '==', username).where('password', '==', password);
-        const adminSnapshot = await adminRef.get();
-        
+
+        const identifier = email || emailOrUsername || username;
+
+        // Try email first, then username
+        let adminSnapshot = await db.collection('admins')
+            .where('email', '==', identifier)
+            .where('password', '==', password)
+            .limit(1)
+            .get();
+
+        if (adminSnapshot.empty) {
+            adminSnapshot = await db.collection('admins')
+                .where('username', '==', identifier)
+                .where('password', '==', password)
+                .limit(1)
+                .get();
+        }
+
         if (!adminSnapshot.empty) {
             const admin = adminSnapshot.docs[0].data();
-            res.json({ 
-                success: true, 
-                message: 'Admin login successful', 
-                admin: { 
-                    id: admin.id, 
-                    username: admin.username, 
-                    type: 'admin' 
-                } 
+            return res.json({
+                success: true,
+                message: 'Admin login successful',
+                admin: {
+                    id: admin.id,
+                    username: admin.username,
+                    type: 'admin'
+                }
             });
-        } else {
-            res.status(401).json({ success: false, message: 'Invalid admin credentials' });
         }
+
+        return res.status(401).json({ success: false, message: 'Invalid admin credentials' });
     } catch (error) {
         console.error('Admin login error:', error);
         res.status(500).json({ success: false, message: 'Internal server error' });

@@ -13,6 +13,7 @@
             <div class="logo">
                 <i class="fas fa-road"></i>
                 <h1>Pothole Detection System</h1>
+                <p class="subtitle">Report and track road infrastructure issues</p>
             </div>
             
             <div class="tab-buttons">
@@ -23,13 +24,15 @@
             <!-- User Login Form -->
             <form id="userLoginForm" class="login-form active">
                 <h2>User Login</h2>
+                <p class="form-subtitle">Access your account to report potholes</p>
+                
                 <div class="form-group">
-                    <i class="fas fa-envelope"></i>
-                    <input type="email" id="userEmail" placeholder="Email" required>
+                    <label for="userEmailOrUsername">Email or Username</label>
+                    <input type="text" id="userEmailOrUsername" placeholder="your.email@example.com or username" required>
                 </div>
                 <div class="form-group">
-                    <i class="fas fa-lock"></i>
-                    <input type="password" id="userPassword" placeholder="Password" required>
+                    <label for="userPassword">Password</label>
+                    <input type="password" id="userPassword" placeholder="Enter your password" required>
                 </div>
                 <button type="submit" class="login-btn">Login</button>
                 <p class="signup-link">Don't have an account? <a href="#" onclick="showSignup()">Sign up</a></p>
@@ -38,37 +41,102 @@
             <!-- Admin Login Form -->
             <form id="adminLoginForm" class="login-form">
                 <h2>Admin Login</h2>
+                <p class="form-subtitle">Government agency access</p>
+                
                 <div class="form-group">
-                    <i class="fas fa-user-shield"></i>
-                    <input type="text" id="adminUsername" placeholder="Admin Username" required>
+                    <label for="adminEmailOrUsername">Email or Username</label>
+                    <input type="text" id="adminEmailOrUsername" placeholder="admin@agency.gov.in or username" required>
                 </div>
                 <div class="form-group">
-                    <i class="fas fa-lock"></i>
-                    <input type="password" id="adminPassword" placeholder="Password" required>
+                    <label for="adminPassword">Password</label>
+                    <input type="password" id="adminPassword" placeholder="Enter your password" required>
                 </div>
                 <button type="submit" class="login-btn">Login as Admin</button>
+                <p class="signup-link">Need admin account? <a href="#" onclick="showAdminSignup()">Sign up</a></p>
             </form>
 
-            <!-- Signup Form -->
+            <!-- Admin Signup Form -->
+            <form id="adminSignupForm" class="login-form">
+                <h2>Register Your Agency</h2>
+                <p class="form-subtitle">Government agency registration</p>
+                
+                <div class="form-row">
+                    <div class="form-group">
+                        <label for="adminSignupDepartment">Agency / Department Name</label>
+                        <input type="text" id="adminSignupDepartment" placeholder="Department Name" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="adminSignupEmail">Official Email</label>
+                        <input type="email" id="adminSignupEmail" placeholder="official@department.gov.in" required>
+                    </div>
+                </div>
+                
+                <div class="form-row">
+                    <div class="form-group">
+                        <label for="adminSignupName">Official Name</label>
+                        <input type="text" id="adminSignupName" placeholder="Full Name" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="adminSignupUsername">Username</label>
+                        <input type="text" id="adminSignupUsername" placeholder="Choose username" required>
+                    </div>
+                </div>
+                
+                <div class="form-row">
+                    <div class="form-group">
+                        <label for="adminSignupPassword">Password</label>
+                        <input type="password" id="adminSignupPassword" placeholder="Create password" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="adminSignupConfirmPassword">Confirm Password</label>
+                        <input type="password" id="adminSignupConfirmPassword" placeholder="Re-enter password" required>
+                    </div>
+                </div>
+                
+                <div class="password-requirements">
+                    <p class="requirement"><i class="fas fa-check-circle"></i> At least 8 characters long</p>
+                    <p class="requirement"><i class="fas fa-check-circle"></i> Mix of uppercase and lowercase letters</p>
+                    <p class="requirement"><i class="fas fa-check-circle"></i> Includes numbers and special characters</p>
+                </div>
+                
+                <button type="submit" class="login-btn">Create Account</button>
+                <p class="signup-link">Already have admin account? <a href="#" onclick="showTab('admin')">Login</a></p>
+            </form>
+
+            <!-- User Signup Form -->
             <form id="signupForm" class="login-form">
                 <h2>Create Account</h2>
-                <div class="form-group">
-                    <i class="fas fa-user"></i>
-                    <input type="text" id="signupName" placeholder="Full Name" required>
+                <p class="form-subtitle">Join and start reporting road issues</p>
+                
+                <div class="form-row">
+                    <div class="form-group">
+                        <label for="signupName">Full Name</label>
+                        <input type="text" id="signupName" placeholder="Your Full Name" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="signupEmail">Email Address</label>
+                        <input type="email" id="signupEmail" placeholder="your.email@example.com" required>
+                    </div>
                 </div>
-                <div class="form-group">
-                    <i class="fas fa-envelope"></i>
-                    <input type="email" id="signupEmail" placeholder="Email" required>
+                
+                <div class="form-row">
+                    <div class="form-group">
+                        <label for="signupPhone">Contact Number</label>
+                        <input type="tel" id="signupPhone" placeholder="+91 1234567890" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="signupPassword">Password</label>
+                        <input type="password" id="signupPassword" placeholder="Create password" required>
+                    </div>
                 </div>
-                <div class="form-group">
-                    <i class="fas fa-phone"></i>
-                    <input type="tel" id="signupPhone" placeholder="Phone Number" required>
+                
+                <div class="password-requirements">
+                    <p class="requirement"><i class="fas fa-check-circle"></i> At least 8 characters long</p>
+                    <p class="requirement"><i class="fas fa-check-circle"></i> Mix of uppercase and lowercase letters</p>
+                    <p class="requirement"><i class="fas fa-check-circle"></i> Includes numbers and special characters</p>
                 </div>
-                <div class="form-group">
-                    <i class="fas fa-lock"></i>
-                    <input type="password" id="signupPassword" placeholder="Password" required>
-                </div>
-                <button type="submit" class="login-btn">Sign Up</button>
+                
+                <button type="submit" class="login-btn">Create Account</button>
                 <p class="signup-link">Already have an account? <a href="#" onclick="showLogin()">Login</a></p>
             </form>
         </div>
