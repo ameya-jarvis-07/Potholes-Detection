@@ -91,7 +91,13 @@ app.post('/api/signup', (req, res) => {
 app.post('/api/login', (req, res) => {
     const { email, password } = req.body;
     
+    // Validate inputs exist
+    if (!email || !password) {
+        return res.status(400).json({ success: false, message: 'Email and password are required' });
+    }
+    
     const data = readData();
+    // Strict exact match - both email AND password must match exactly
     const user = data.users.find(u => u.email === email && u.password === password);
     
     if (user) {
@@ -114,7 +120,13 @@ app.post('/api/login', (req, res) => {
 app.post('/api/admin/login', (req, res) => {
     const { username, password } = req.body;
     
+    // Validate inputs exist
+    if (!username || !password) {
+        return res.status(400).json({ success: false, message: 'Username and password are required' });
+    }
+    
     const data = readData();
+    // Strict exact match - both username AND password must match exactly
     const admin = data.admins.find(a => a.username === username && a.password === password);
     
     if (admin) {

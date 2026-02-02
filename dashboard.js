@@ -2,8 +2,119 @@
 let currentImage = null;
 let detectionResults = null;
 
+// Toast Notification Function
+function showToast(message, type = 'success', duration = 3000) {
+    const container = document.getElementById('toastContainer');
+    if (!container) return;
+    
+    const toast = document.createElement('div');
+    toast.className = `toast ${type}`;
+    
+    const icons = {
+        success: 'fas fa-check-circle',
+        error: 'fas fa-exclamation-circle',
+        warning: 'fas fa-exclamation-triangle',
+        info: 'fas fa-info-circle'
+    };
+    
+    toast.innerHTML = `
+        <i class="toast-icon ${icons[type] || icons.info}"></i>
+        <div class="toast-content">
+            <div class="toast-message">${message}</div>
+        </div>
+    `;
+    
+    container.appendChild(toast);
+    
+    setTimeout(() => {
+        toast.style.opacity = '0';
+        toast.style.transform = 'translateX(400px)';
+        setTimeout(() => {
+            if (toast.parentNode) {
+                toast.parentNode.removeChild(toast);
+            }
+        }, 300);
+    }, duration);
+}
+
+// Modal Functions
+function showModal(title, message, type = 'info', callback = null) {
+    const modal = document.getElementById('messageModal');
+    const modalTitle = document.getElementById('modalTitle');
+    const modalMessage = document.getElementById('modalMessage');
+    const modalHeader = modal.querySelector('.modal-header');
+    const modalIcon = modal.querySelector('.modal-icon');
+    const okBtn = document.getElementById('modalOkBtn');
+    
+    modalTitle.textContent = title;
+    modalMessage.textContent = message;
+    
+    // Set modal style based on type
+    modalHeader.className = 'modal-header ' + type;
+    
+    // Set icon based on type
+    const icons = {
+        success: 'fas fa-check-circle',
+        error: 'fas fa-exclamation-circle',
+        warning: 'fas fa-exclamation-triangle',
+        info: 'fas fa-info-circle'
+    };
+    modalIcon.className = 'modal-icon ' + (icons[type] || icons.info);
+    
+    modal.classList.add('show');
+    
+    okBtn.onclick = function() {
+        modal.classList.remove('show');
+        if (callback) callback();
+    };
+    
+    // Close on background click
+    modal.onclick = function(e) {
+        if (e.target === modal) {
+            modal.classList.remove('show');
+        }
+    };
+}
+
+function showConfirmModal(title, message, onConfirm, onCancel = null) {
+    const modal = document.getElementById('confirmModal');
+    const confirmTitle = document.getElementById('confirmTitle');
+    const confirmMessage = document.getElementById('confirmMessage');
+    const confirmOkBtn = document.getElementById('confirmOkBtn');
+    const confirmCancelBtn = document.getElementById('confirmCancelBtn');
+    
+    confirmTitle.textContent = title;
+    confirmMessage.textContent = message;
+    
+    modal.classList.add('show');
+    
+    confirmOkBtn.onclick = function() {
+        modal.classList.remove('show');
+        if (onConfirm) onConfirm();
+    };
+    
+    confirmCancelBtn.onclick = function() {
+        modal.classList.remove('show');
+        if (onCancel) onCancel();
+    };
+    
+    // Close on background click
+    modal.onclick = function(e) {
+        if (e.target === modal) {
+            modal.classList.remove('show');
+            if (onCancel) onCancel();
+        }
+    };
+}
+
 // Initialize dashboard
 document.addEventListener('DOMContentLoaded', function() {
+    // Check if just logged in and show toast
+    if (localStorage.getItem('justLoggedIn') === 'true') {
+        localStorage.removeItem('justLoggedIn');
+        showToast('Login successful! Welcome back.', 'success');
+    }
+    
     // Set user name
     const userName = localStorage.getItem('userName') || 'User';
     document.getElementById('userName').textContent = userName;
@@ -126,26 +237,20 @@ function submitReport() {
     localStorage.setItem('potholeReports', JSON.stringify(reports));
     
     // Show success message
-    Toastify({
-        text: "Report submitted successfully!",
-        duration: 3000,
-        gravity: "top",
-        position: "right",
-        backgroundColor: "linear-gradient(to right, #00b09b, #96c93d)"
-    }).showToast();
-    
-    // Reset form
-    document.querySelector('.upload-box').style.display = 'block';
-    document.getElementById('previewContainer').classList.add('hidden');
-    document.getElementById('resultsContainer').classList.add('hidden');
-    document.getElementById('locationInput').value = '';
-    document.getElementById('imageUpload').value = '';
-    currentImage = null;
-    detectionResults = null;
-    
-    // Refresh reports and stats
-    loadUserReports();
-    loadStatistics();
+    showModal('Success', 'Report submitted successfully!', 'success', function() {
+        // Reset form
+        document.querySelector('.upload-box').style.display = 'block';
+        document.getElementById('previewContainer').classList.add('hidden');
+        document.getElementById('resultsContainer').classList.add('hidden');
+        document.getElementById('locationInput').value = '';
+        document.getElementById('imageUpload').value = '';
+        currentImage = null;
+        detectionResults = null;
+        
+        // Refresh reports and stats
+        loadUserReports();
+        loadStatistics();
+    });
 }
 
 // Load user reports
@@ -202,8 +307,9 @@ function loadStatistics() {
 
 // Logout
 function logout() {
-    if (confirm('Are you sure you want to logout?')) {
+    showConfirmModal('Logout', 'Are you sure you want to logout?', function() {
+        localStorage.setItem('justLoggedOut', 'true');
         localStorage.removeItem('userType');
         window.location.href = 'index.html';
-    }
+    });
 }

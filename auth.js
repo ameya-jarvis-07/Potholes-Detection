@@ -1,3 +1,77 @@
+// Toast Notification Function
+function showToast(message, type = 'success', duration = 3000) {
+    const container = document.getElementById('toastContainer');
+    if (!container) return;
+    
+    const toast = document.createElement('div');
+    toast.className = `toast ${type}`;
+    
+    const icons = {
+        success: 'fas fa-check-circle',
+        error: 'fas fa-exclamation-circle',
+        warning: 'fas fa-exclamation-triangle',
+        info: 'fas fa-info-circle'
+    };
+    
+    toast.innerHTML = `
+        <i class="toast-icon ${icons[type] || icons.info}"></i>
+        <div class="toast-content">
+            <div class="toast-message">${message}</div>
+        </div>
+    `;
+    
+    container.appendChild(toast);
+    
+    setTimeout(() => {
+        toast.style.opacity = '0';
+        toast.style.transform = 'translateX(400px)';
+        setTimeout(() => {
+            if (toast.parentNode) {
+                toast.parentNode.removeChild(toast);
+            }
+        }, 300);
+    }, duration);
+}
+
+// Modal Functions
+function showModal(title, message, type = 'info', callback = null) {
+    const modal = document.getElementById('messageModal');
+    const modalTitle = document.getElementById('modalTitle');
+    const modalMessage = document.getElementById('modalMessage');
+    const modalHeader = modal.querySelector('.modal-header');
+    const modalIcon = modal.querySelector('.modal-icon');
+    const okBtn = document.getElementById('modalOkBtn');
+    
+    modalTitle.textContent = title;
+    modalMessage.textContent = message;
+    
+    // Set modal style based on type
+    modalHeader.className = 'modal-header ' + type;
+    
+    // Set icon based on type
+    const icons = {
+        success: 'fas fa-check-circle',
+        error: 'fas fa-exclamation-circle',
+        warning: 'fas fa-exclamation-triangle',
+        info: 'fas fa-info-circle'
+    };
+    modalIcon.className = 'modal-icon ' + (icons[type] || icons.info);
+    
+    modal.classList.add('show');
+    
+    okBtn.onclick = function() {
+        modal.classList.remove('show');
+        if (callback) callback();
+    };
+    
+    // Close on background click
+    modal.onclick = function(e) {
+        if (e.target === modal) {
+            modal.classList.remove('show');
+        }
+    };
+}
+
 // Authentication handling
 function showTab(tab) {
     const userForm = document.getElementById('userLoginForm');
@@ -33,73 +107,84 @@ function showLogin() {
 }
 
 // User Login
-document.getElementById('userLoginForm')?.addEventListener('submit', function(e) {
+document.getElementById('userLoginForm')?.addEventListener('submit', async function(e) {
     e.preventDefault();
     const email = document.getElementById('userEmail').value;
     const password = document.getElementById('userPassword').value;
 
-    // Simple validation (in production, use backend authentication)
     if (email && password) {
-        // Store user data
-        localStorage.setItem('userEmail', email);
-        localStorage.setItem('userType', 'user');
-        localStorage.setItem('userName', email.split('@')[0]);
-        
-        // Show success message
-        Toastify({
-            text: "Login successful!",
-            duration: 3000,
-            gravity: "top",
-            position: "right",
-            backgroundColor: "linear-gradient(to right, #00b09b, #96c93d)"
-        }).showToast();
-        
-        // Redirect to dashboard
-        window.location.href = 'dashboard.html';
+        try {
+            const response = await fetch('http://localhost:3000/api/login', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({ email, password })
+            });
+            
+            const result = await response.json();
+            
+            if (result.success) {
+                // Store user data
+                localStorage.setItem('userId', result.user.id);
+                localStorage.setItem('userEmail', result.user.email);
+                localStorage.setItem('userName', result.user.name);
+                localStorage.setItem('userType', 'user');
+                
+                // Set login success flag and redirect
+                localStorage.setItem('justLoggedIn', 'true');
+                window.location.href = 'dashboard.html';
+            } else {
+                showModal('Error', result.message || 'Invalid email or password', 'error');
+            }
+        } catch (error) {
+            showModal('Error', 'Unable to connect to server. Please make sure the server is running.', 'error');
+        }
     } else {
-        Toastify({
-            text: "Please fill in all fields",
-            duration: 3000,
-            gravity: "top",
-            position: "right",
-            backgroundColor: "linear-gradient(to right, #ff5f6d, #ffc371)"
-        }).showToast();
+        showModal('Error', 'Please fill in all fields', 'error');
     }
 });
 
 // Admin Login
-document.getElementById('adminLoginForm')?.addEventListener('submit', function(e) {
+document.getElementById('adminLoginForm')?.addEventListener('submit', async function(e) {
     e.preventDefault();
     const username = document.getElementById('adminUsername').value;
     const password = document.getElementById('adminPassword').value;
 
-    // Simple admin validation (default: admin/admin123)
-    if (username === 'admin' && password === 'admin123') {
-        // Store admin data
-        localStorage.setItem('userType', 'admin');
-        localStorage.setItem('adminName', username);
-        
-        Toastify({
-            text: "Admin login successful!",
-            duration: 3000,
-            gravity: "top",
-            position: "right",
-            backgroundColor: "linear-gradient(to right, #00b09b, #96c93d)"
-        }).showToast();
-        window.location.href = 'admin.html';
+    if (username && password) {
+        try {
+            const response = await fetch('http://localhost:3000/api/admin/login', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({ username, password })
+            });
+            
+            const result = await response.json();
+            
+            if (result.success) {
+                // Store admin data
+                localStorage.setItem('adminId', result.admin.id);
+                localStorage.setItem('adminName', result.admin.username);
+                localStorage.setItem('userType', 'admin');
+                
+                // Set login success flag and redirect
+                localStorage.setItem('justLoggedIn', 'true');
+                window.location.href = 'admin.html';
+            } else {
+                showModal('Error', result.message || 'Invalid admin credentials', 'error');
+            }
+        } catch (error) {
+            showModal('Error', 'Unable to connect to server. Please make sure the server is running.', 'error');
+        }
     } else {
-        Toastify({
-            text: "Invalid admin credentials. Try admin/admin123",
-            duration: 3000,
-            gravity: "top",
-            position: "right",
-            backgroundColor: "linear-gradient(to right, #ff5f6d, #ffc371)"
-        }).showToast();
+        showModal('Error', 'Please fill in all fields', 'error');
     }
 });
 
 // Signup
-document.getElementById('signupForm')?.addEventListener('submit', function(e) {
+document.getElementById('signupForm')?.addEventListener('submit', async function(e) {
     e.preventDefault();
     const name = document.getElementById('signupName').value;
     const email = document.getElementById('signupEmail').value;
@@ -107,27 +192,29 @@ document.getElementById('signupForm')?.addEventListener('submit', function(e) {
     const password = document.getElementById('signupPassword').value;
 
     if (name && email && phone && password) {
-        // Store user data
-        localStorage.setItem('userName', name);
-        localStorage.setItem('userEmail', email);
-        localStorage.setItem('userPhone', phone);
-        
-        Toastify({
-            text: "Account created successfully! Please login.",
-            duration: 3000,
-            gravity: "top",
-            position: "right",
-            backgroundColor: "linear-gradient(to right, #00b09b, #96c93d)"
-        }).showToast();
-        showLogin();
+        try {
+            const response = await fetch('http://localhost:3000/api/signup', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({ name, email, phone, password })
+            });
+            
+            const result = await response.json();
+            
+            if (result.success) {
+                showModal('Success', 'Account created successfully! Please login.', 'success', function() {
+                    showLogin();
+                });
+            } else {
+                showModal('Error', result.message || 'Unable to create account', 'error');
+            }
+        } catch (error) {
+            showModal('Error', 'Unable to connect to server. Please make sure the server is running.', 'error');
+        }
     } else {
-        Toastify({
-            text: "Please fill in all fields",
-            duration: 3000,
-            gravity: "top",
-            position: "right",
-            backgroundColor: "linear-gradient(to right, #ff5f6d, #ffc371)"
-        }).showToast();
+        showModal('Error', 'Please fill in all fields', 'error');
     }
 });
 
@@ -135,6 +222,12 @@ document.getElementById('signupForm')?.addEventListener('submit', function(e) {
 function logout() {
     localStorage.clear();
     window.location.href = 'index.html';
+}
+
+// Check if just logged out and show toast
+if (localStorage.getItem('justLoggedOut') === 'true') {
+    localStorage.removeItem('justLoggedOut');
+    showToast('Logged out successfully!', 'info');
 }
 
 // Check authentication on dashboard/admin pages
