@@ -212,7 +212,13 @@ function viewReport(reportId) {
     const report = reports.find(r => r.id === reportId);
     
     if (report) {
-        alert(`Report Details:\n\nID: ${report.id}\nUser: ${report.user}\nLocation: ${report.location}\nPotholes: ${report.count}\nSeverity: ${report.severity}\nConfidence: ${report.confidence}%\nStatus: ${report.status}\nDate: ${new Date(report.timestamp).toLocaleString()}`);
+        Toastify({
+            text: `Report #${report.id}\nLocation: ${report.location}\nPotholes: ${report.count}\nSeverity: ${report.severity}\nConfidence: ${report.confidence}%\nStatus: ${report.status}`,
+            duration: 5000,
+            gravity: "top",
+            position: "center",
+            backgroundColor: "linear-gradient(to right, #4facfe, #00f2fe)"
+        }).showToast();
     }
 }
 
@@ -223,7 +229,13 @@ function viewUser(email) {
     const user = userReports[0];
     
     if (user) {
-        alert(`User Details:\n\nName: ${user.user}\nEmail: ${email}\nTotal Reports: ${userReports.length}\nJoined: ${new Date(user.timestamp).toLocaleDateString()}`);
+        Toastify({
+            text: `User: ${user.user}\nEmail: ${email}\nTotal Reports: ${userReports.length}\nJoined: ${new Date(user.timestamp).toLocaleDateString()}`,
+            duration: 5000,
+            gravity: "top",
+            position: "center",
+            backgroundColor: "linear-gradient(to right, #4facfe, #00f2fe)"
+        }).showToast();
     }
 }
 
@@ -236,7 +248,13 @@ function updateReportStatus(reportId, newStatus) {
         reports[reportIndex].status = newStatus;
         localStorage.setItem('potholeReports', JSON.stringify(reports));
         
-        alert(`Report #${reportId} has been ${newStatus}!`);
+        Toastify({
+            text: `Report #${reportId} has been ${newStatus}!`,
+            duration: 3000,
+            gravity: "top",
+            position: "right",
+            backgroundColor: "linear-gradient(to right, #00b09b, #96c93d)"
+        }).showToast();
         
         // Reload data
         loadAdminOverview();

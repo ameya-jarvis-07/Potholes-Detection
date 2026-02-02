@@ -126,7 +126,13 @@ function submitReport() {
     localStorage.setItem('potholeReports', JSON.stringify(reports));
     
     // Show success message
-    alert('Report submitted successfully!');
+    Toastify({
+        text: "Report submitted successfully!",
+        duration: 3000,
+        gravity: "top",
+        position: "right",
+        backgroundColor: "linear-gradient(to right, #00b09b, #96c93d)"
+    }).showToast();
     
     // Reset form
     document.querySelector('.upload-box').style.display = 'block';

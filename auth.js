@@ -46,12 +46,24 @@ document.getElementById('userLoginForm')?.addEventListener('submit', function(e)
         localStorage.setItem('userName', email.split('@')[0]);
         
         // Show success message
-        alert('Login successful!');
+        Toastify({
+            text: "Login successful!",
+            duration: 3000,
+            gravity: "top",
+            position: "right",
+            backgroundColor: "linear-gradient(to right, #00b09b, #96c93d)"
+        }).showToast();
         
         // Redirect to dashboard
         window.location.href = 'dashboard.html';
     } else {
-        alert('Please fill in all fields');
+        Toastify({
+            text: "Please fill in all fields",
+            duration: 3000,
+            gravity: "top",
+            position: "right",
+            backgroundColor: "linear-gradient(to right, #ff5f6d, #ffc371)"
+        }).showToast();
     }
 });
 
@@ -67,10 +79,22 @@ document.getElementById('adminLoginForm')?.addEventListener('submit', function(e
         localStorage.setItem('userType', 'admin');
         localStorage.setItem('adminName', username);
         
-        alert('Admin login successful!');
+        Toastify({
+            text: "Admin login successful!",
+            duration: 3000,
+            gravity: "top",
+            position: "right",
+            backgroundColor: "linear-gradient(to right, #00b09b, #96c93d)"
+        }).showToast();
         window.location.href = 'admin.html';
     } else {
-        alert('Invalid admin credentials. Try admin/admin123');
+        Toastify({
+            text: "Invalid admin credentials. Try admin/admin123",
+            duration: 3000,
+            gravity: "top",
+            position: "right",
+            backgroundColor: "linear-gradient(to right, #ff5f6d, #ffc371)"
+        }).showToast();
     }
 });
 
@@ -88,10 +112,22 @@ document.getElementById('signupForm')?.addEventListener('submit', function(e) {
         localStorage.setItem('userEmail', email);
         localStorage.setItem('userPhone', phone);
         
-        alert('Account created successfully! Please login.');
+        Toastify({
+            text: "Account created successfully! Please login.",
+            duration: 3000,
+            gravity: "top",
+            position: "right",
+            backgroundColor: "linear-gradient(to right, #00b09b, #96c93d)"
+        }).showToast();
         showLogin();
     } else {
-        alert('Please fill in all fields');
+        Toastify({
+            text: "Please fill in all fields",
+            duration: 3000,
+            gravity: "top",
+            position: "right",
+            backgroundColor: "linear-gradient(to right, #ff5f6d, #ffc371)"
+        }).showToast();
     }
 });
 
