@@ -135,13 +135,13 @@ document.getElementById('userLoginForm')?.addEventListener('submit', async funct
             
             if (result.success) {
                 // Store user data
-                localStorage.setItem('userId', result.user.id);
-                localStorage.setItem('userEmail', result.user.email);
-                localStorage.setItem('userName', result.user.name);
-                localStorage.setItem('userType', 'user');
+                sessionStorage.setItem('userId', result.user.id);
+                sessionStorage.setItem('userEmail', result.user.email);
+                sessionStorage.setItem('userName', result.user.name);
+                sessionStorage.setItem('userType', 'user');
                 
                 // Set login success flag and redirect
-                localStorage.setItem('justLoggedIn', 'true');
+                sessionStorage.setItem('justLoggedIn', 'true');
                 window.location.href = 'dashboard.html';
             } else {
                 showModal('Error', result.message || 'Invalid email or password', 'error');
@@ -174,12 +174,12 @@ document.getElementById('adminLoginForm')?.addEventListener('submit', async func
             
             if (result.success) {
                 // Store admin data
-                localStorage.setItem('adminId', result.admin.id);
-                localStorage.setItem('adminName', result.admin.username);
-                localStorage.setItem('userType', 'admin');
+                sessionStorage.setItem('adminId', result.admin.id);
+                sessionStorage.setItem('adminName', result.admin.username);
+                sessionStorage.setItem('userType', 'admin');
                 
                 // Set login success flag and redirect
-                localStorage.setItem('justLoggedIn', 'true');
+                sessionStorage.setItem('justLoggedIn', 'true');
                 window.location.href = 'admin.html';
             } else {
                 showModal('Error', result.message || 'Invalid admin credentials', 'error');
@@ -209,13 +209,19 @@ document.getElementById('signupForm')?.addEventListener('submit', async function
                 },
                 body: JSON.stringify({ name, email, phone, password })
             });
-            
+
             const result = await response.json();
-            
+
             if (result.success) {
-                showModal('Success', 'Account created successfully! Please login.', 'success', function() {
-                    showLogin();
-                });
+                // Automatically log in the user after successful signup
+                sessionStorage.setItem('userId', result.user.id);
+                sessionStorage.setItem('userEmail', result.user.email);
+                sessionStorage.setItem('userName', result.user.name);
+                sessionStorage.setItem('userType', 'user');
+
+                showToast('Account created and logged in successfully!', 'success');
+                // Redirect to dashboard
+                window.location.href = 'dashboard.html';
             } else {
                 showModal('Error', result.message || 'Unable to create account', 'error');
             }
@@ -278,19 +284,19 @@ document.getElementById('adminSignupForm')?.addEventListener('submit', async fun
 
 // Logout function
 function logout() {
-    localStorage.clear();
+    sessionStorage.clear();
     window.location.href = 'index.html';
 }
 
 // Check if just logged out and show toast
-if (localStorage.getItem('justLoggedOut') === 'true') {
-    localStorage.removeItem('justLoggedOut');
+if (sessionStorage.getItem('justLoggedOut') === 'true') {
+    sessionStorage.removeItem('justLoggedOut');
     showToast('Logged out successfully!', 'info');
 }
 
 // Check authentication on dashboard/admin pages
 function checkAuth() {
-    const userType = localStorage.getItem('userType');
+    const userType = sessionStorage.getItem('userType');
     const currentPage = window.location.pathname.split('/').pop();
     
     if (currentPage === 'dashboard.html' && userType !== 'user') {

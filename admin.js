@@ -123,15 +123,18 @@ function showConfirmModal(title, message, onConfirm, onCancel = null) {
     };
 }
 
+let allReports = [];
+let allUsers = [];
+
 document.addEventListener('DOMContentLoaded', function() {
     // Check if just logged in and show toast
-    if (localStorage.getItem('justLoggedIn') === 'true') {
-        localStorage.removeItem('justLoggedIn');
+    if (sessionStorage.getItem('justLoggedIn') === 'true') {
+        sessionStorage.removeItem('justLoggedIn');
         showToast('Admin login successful! Welcome back.', 'success');
     }
     
     // Set admin name
-    const adminName = localStorage.getItem('adminName') || 'Administrator';
+    const adminName = sessionStorage.getItem('adminName') || 'Administrator';
     document.getElementById('adminName').textContent = adminName;
     
     // Load initial data
@@ -179,6 +182,9 @@ function showAdminSection(section) {
     document.getElementById(sectionMap[section]).classList.add('active');
     
     // Add active to clicked menu item
+    if (event) {
+        event.currentTarget.classList.add('active');
+    }
     event.currentTarget.classList.add('active');
     
     // Close sidebar on mobile after selection
@@ -193,23 +199,25 @@ function showAdminSection(section) {
 }
 
 // Load admin overview
-function loadAdminOverview() {
-    const reports = JSON.parse(localStorage.getItem('potholeReports') || '[]');
-    
-    const total = reports.length;
-    const pending = reports.filter(r => r.status === 'pending').length;
-    const resolved = reports.filter(r => r.status === 'resolved').length;
-    const activeUsers = [...new Set(reports.map(r => r.email))].length;
-    
-    document.getElementById('adminTotalReports').textContent = total;
-    document.getElementById('adminPendingReports').textContent = pending;
-    document.getElementById('adminResolvedReports').textContent = resolved;
-    document.getElementById('adminActiveUsers').textContent = activeUsers;
+async function loadAdminOverview() {
+    try {
+        const response = await fetch('http://localhost:3000/api/statistics');
+        const result = await response.json();
+        
+        if (result.success) {
+            const stats = result.statistics;
+            document.getElementById('adminTotalReports').textContent = stats.totalReports;
+            document.getElementById('adminPendingReports').textContent = stats.pendingReports;
+            document.getElementById('adminResolvedReports').textContent = stats.resolvedReports;
+            document.getElementById('adminActiveUsers').textContent = stats.totalUsers;
+        }
+    } catch (error) {
+        console.error('Error loading overview:', error);
+    }
 }
 
 // Load recent activity
-function loadRecentActivity() {
-    const reports = JSON.parse(localStorage.getItem('potholeReports') || '[]');
+function loadRecentActivity(reports) {
     const recentReports = reports.slice(-5).reverse();
     
     const activityList = document.getElementById('recentActivityList');
@@ -221,15 +229,29 @@ function loadRecentActivity() {
     
     activityList.innerHTML = recentReports.map(report => `
         <div class="activity-item">
-            <p><strong>${report.user}</strong> reported ${report.count} pothole(s) at ${report.location}</p>
-            <span class="activity-time">${getTimeAgo(report.timestamp)}</span>
+            <p><strong>${report.userName}</strong> reported ${report.count} pothole(s) at ${report.location}</p>
+            <span class="activity-time">${getTimeAgo(report.createdAt)}</span>
         </div>
     `).join('');
 }
 
 // Load all reports
-function loadAllReports() {
-    const reports = JSON.parse(localStorage.getItem('potholeReports') || '[]');
+async function loadAllReports() {
+    try {
+        const response = await fetch('http://localhost:3000/api/reports');
+        const result = await response.json();
+        
+        if (result.success) {
+            allReports = result.reports;
+            renderReportsTable(allReports);
+            loadRecentActivity(allReports);
+        }
+    } catch (error) {
+        console.error('Error loading reports:', error);
+    }
+}
+
+function renderReportsTable(reports) {
     const tbody = document.getElementById('reportsTableBody');
     
     if (reports.length === 0) {
@@ -240,10 +262,10 @@ function loadAllReports() {
     tbody.innerHTML = reports.map(report => `
         <tr>
             <td>#${report.id}</td>
-            <td>${report.user}</td>
+            <td>${report.userName}</td>
             <td>${report.location}</td>
             <td><span class="severity ${report.severity}">${report.severity}</span></td>
-            <td>${new Date(report.timestamp).toLocaleDateString()}</td>
+            <td>${new Date(report.createdAt).toLocaleDateString()}</td>
             <td><span class="report-status ${report.status}">${report.status}</span></td>
             <td>
                 <button class="action-btn view" onclick="viewReport(${report.id})">View</button>
@@ -256,43 +278,37 @@ function loadAllReports() {
 }
 
 // Load all users
-function loadAllUsers() {
-    const reports = JSON.parse(localStorage.getItem('potholeReports') || '[]');
-    const users = {};
-    
-    reports.forEach(report => {
-        if (!users[report.email]) {
-            users[report.email] = {
-                name: report.user,
-                email: report.email,
-                reports: 0,
-                joined: report.timestamp
-            };
+async function loadAllUsers() {
+    try {
+        const response = await fetch('http://localhost:3000/api/users');
+        const result = await response.json();
+        
+        if (result.success) {
+            allUsers = result.users;
+            const tbody = document.getElementById('usersTableBody');
+            
+            if (allUsers.length === 0) {
+                tbody.innerHTML = '<tr><td colspan="7" style="text-align: center; color: #999;">No users found</td></tr>';
+                return;
+            }
+            
+            tbody.innerHTML = allUsers.map((user, index) => `
+                <tr>
+                    <td>#${user.id}</td>
+                    <td>${user.name}</td>
+                    <td>${user.email}</td>
+                    <td>${user.phone || 'N/A'}</td>
+                    <td>${new Date(user.createdAt).toLocaleDateString()}</td>
+                    <td><span class="report-status resolved">Active</span></td>
+                    <td>
+                        <button class="action-btn view" onclick="viewUser(${user.id})">View</button>
+                    </td>
+                </tr>
+            `).join('');
         }
-        users[report.email].reports++;
-    });
-    
-    const tbody = document.getElementById('usersTableBody');
-    const userArray = Object.values(users);
-    
-    if (userArray.length === 0) {
-        tbody.innerHTML = '<tr><td colspan="7" style="text-align: center; color: #999;">No users found</td></tr>';
-        return;
+    } catch (error) {
+        console.error('Error loading users:', error);
     }
-    
-    tbody.innerHTML = userArray.map((user, index) => `
-        <tr>
-            <td>#${index + 1}</td>
-            <td>${user.name}</td>
-            <td>${user.email}</td>
-            <td>${user.reports}</td>
-            <td>${new Date(user.joined).toLocaleDateString()}</td>
-            <td><span class="report-status resolved">Active</span></td>
-            <td>
-                <button class="action-btn view" onclick="viewUser('${user.email}')">View</button>
-            </td>
-        </tr>
-    `).join('');
 }
 
 // Filter reports
@@ -300,104 +316,76 @@ function filterReports() {
     const statusFilter = document.getElementById('statusFilter').value;
     const severityFilter = document.getElementById('severityFilter').value;
     
-    let reports = JSON.parse(localStorage.getItem('potholeReports') || '[]');
+    let filtered = allReports;
     
     if (statusFilter !== 'all') {
-        reports = reports.filter(r => r.status === statusFilter);
+        filtered = filtered.filter(r => r.status === statusFilter);
     }
     
     if (severityFilter !== 'all') {
-        reports = reports.filter(r => r.severity === severityFilter);
+        filtered = filtered.filter(r => r.severity === severityFilter);
     }
     
-    // Update table with filtered reports
-    const tbody = document.getElementById('reportsTableBody');
-    tbody.innerHTML = reports.map(report => `
-        <tr>
-            <td>#${report.id}</td>
-            <td>${report.user}</td>
-            <td>${report.location}</td>
-            <td><span class="severity ${report.severity}">${report.severity}</span></td>
-            <td>${new Date(report.timestamp).toLocaleDateString()}</td>
-            <td><span class="report-status ${report.status}">${report.status}</span></td>
-            <td>
-                <button class="action-btn view" onclick="viewReport(${report.id})">View</button>
-                ${report.status === 'pending' ? `
-                    <button class="action-btn approve" onclick="updateReportStatus(${report.id}, 'resolved')">Resolve</button>
-                ` : ''}
-            </td>
-        </tr>
-    `).join('');
+    renderReportsTable(filtered);
 }
 
 // Search reports
 function searchReports() {
     const searchTerm = document.getElementById('searchReports').value.toLowerCase();
-    const reports = JSON.parse(localStorage.getItem('potholeReports') || '[]');
     
-    const filtered = reports.filter(r => 
-        r.user.toLowerCase().includes(searchTerm) ||
+    const filtered = allReports.filter(r => 
+        r.userName.toLowerCase().includes(searchTerm) ||
         r.location.toLowerCase().includes(searchTerm) ||
         r.id.toString().includes(searchTerm)
     );
     
-    const tbody = document.getElementById('reportsTableBody');
-    tbody.innerHTML = filtered.map(report => `
-        <tr>
-            <td>#${report.id}</td>
-            <td>${report.user}</td>
-            <td>${report.location}</td>
-            <td><span class="severity ${report.severity}">${report.severity}</span></td>
-            <td>${new Date(report.timestamp).toLocaleDateString()}</td>
-            <td><span class="report-status ${report.status}">${report.status}</span></td>
-            <td>
-                <button class="action-btn view" onclick="viewReport(${report.id})">View</button>
-                ${report.status === 'pending' ? `
-                    <button class="action-btn approve" onclick="updateReportStatus(${report.id}, 'resolved')">Resolve</button>
-                ` : ''}
-            </td>
-        </tr>
-    `).join('');
+    renderReportsTable(filtered);
 }
 
 // View report
 function viewReport(reportId) {
-    const reports = JSON.parse(localStorage.getItem('potholeReports') || '[]');
-    const report = reports.find(r => r.id === reportId);
+    const report = allReports.find(r => r.id === reportId);
     
     if (report) {
-        const details = `ID: ${report.id}\nUser: ${report.user}\nLocation: ${report.location}\nPotholes: ${report.count}\nSeverity: ${report.severity}\nConfidence: ${report.confidence}%\nStatus: ${report.status}\nDate: ${new Date(report.timestamp).toLocaleString()}`;
+        const details = `ID: ${report.id}\nUser: ${report.userName}\nLocation: ${report.location}\nPotholes: ${report.count}\nSeverity: ${report.severity}\nConfidence: ${report.confidence}%\nStatus: ${report.status}\nDate: ${new Date(report.createdAt).toLocaleString()}`;
         showModal('Report Details', details, 'info');
     }
 }
 
 // View user
-function viewUser(email) {
-    const reports = JSON.parse(localStorage.getItem('potholeReports') || '[]');
-    const userReports = reports.filter(r => r.email === email);
-    const user = userReports[0];
+function viewUser(userId) {
+    const user = allUsers.find(u => u.id === userId);
     
     if (user) {
-        const details = `Name: ${user.user}\nEmail: ${email}\nTotal Reports: ${userReports.length}\nJoined: ${new Date(user.timestamp).toLocaleDateString()}`;
+        const details = `Name: ${user.name}\nEmail: ${user.email}\nPhone: ${user.phone || 'N/A'}\nJoined: ${new Date(user.createdAt).toLocaleDateString()}`;
         showModal('User Details', details, 'info');
     }
 }
 
 // Update report status
-function updateReportStatus(reportId, newStatus) {
-    const reports = JSON.parse(localStorage.getItem('potholeReports') || '[]');
-    const reportIndex = reports.findIndex(r => r.id === reportId);
-    
-    if (reportIndex !== -1) {
-        reports[reportIndex].status = newStatus;
-        localStorage.setItem('potholeReports', JSON.stringify(reports));
-        
-        showModal('Success', `Report #${reportId} has been ${newStatus}!`, 'success', function() {
-            // Reload data
-            loadAdminOverview();
-            loadAllReports();
-            loadRecentActivity();
+async function updateReportStatus(reportId, newStatus) {
+    try {
+        const response = await fetch(`http://localhost:3000/api/reports/${reportId}`, {
+            method: 'PUT',
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({ status: newStatus })
         });
+        
+        const result = await response.json();
+        
+        if (result.success) {
+            showModal('Success', `Report #${reportId} has been ${newStatus}!`, 'success', function() {
+                // Reload data
+                loadAdminOverview();
+                loadAllReports();
+            });
+        } else {
+            showModal('Error', result.message || 'Failed to update report', 'error');
+        }
+    } catch (error) {
+        showModal('Error', 'Unable to connect to server. Please make sure the server is running.', 'error');
     }
 }
 
@@ -419,8 +407,8 @@ function getTimeAgo(timestamp) {
 // Logout
 function logout() {
     showConfirmModal('Logout', 'Are you sure you want to logout?', function() {
-        localStorage.setItem('justLoggedOut', 'true');
-        localStorage.removeItem('userType');
+        sessionStorage.setItem('justLoggedOut', 'true');
+        sessionStorage.removeItem('userType');
         window.location.href = 'index.html';
     });
 }

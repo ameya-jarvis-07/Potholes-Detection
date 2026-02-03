@@ -24,26 +24,26 @@ function toggleSidebar() {
 function showToast(message, type = 'success', duration = 3000) {
     const container = document.getElementById('toastContainer');
     if (!container) return;
-    
+
     const toast = document.createElement('div');
     toast.className = `toast ${type}`;
-    
+
     const icons = {
         success: 'fas fa-check-circle',
         error: 'fas fa-exclamation-circle',
         warning: 'fas fa-exclamation-triangle',
         info: 'fas fa-info-circle'
     };
-    
+
     toast.innerHTML = `
         <i class="toast-icon ${icons[type] || icons.info}"></i>
         <div class="toast-content">
             <div class="toast-message">${message}</div>
         </div>
     `;
-    
+
     container.appendChild(toast);
-    
+
     setTimeout(() => {
         toast.style.opacity = '0';
         toast.style.transform = 'translateX(400px)';
@@ -63,13 +63,13 @@ function showModal(title, message, type = 'info', callback = null) {
     const modalHeader = modal.querySelector('.modal-header');
     const modalIcon = modal.querySelector('.modal-icon');
     const okBtn = document.getElementById('modalOkBtn');
-    
+
     modalTitle.textContent = title;
     modalMessage.textContent = message;
-    
+
     // Set modal style based on type
     modalHeader.className = 'modal-header ' + type;
-    
+
     // Set icon based on type
     const icons = {
         success: 'fas fa-check-circle',
@@ -78,14 +78,14 @@ function showModal(title, message, type = 'info', callback = null) {
         info: 'fas fa-info-circle'
     };
     modalIcon.className = 'modal-icon ' + (icons[type] || icons.info);
-    
+
     modal.classList.add('show');
-    
+
     okBtn.onclick = function() {
         modal.classList.remove('show');
         if (callback) callback();
     };
-    
+
     // Close on background click
     modal.onclick = function(e) {
         if (e.target === modal) {
@@ -100,22 +100,22 @@ function showConfirmModal(title, message, onConfirm, onCancel = null) {
     const confirmMessage = document.getElementById('confirmMessage');
     const confirmOkBtn = document.getElementById('confirmOkBtn');
     const confirmCancelBtn = document.getElementById('confirmCancelBtn');
-    
+
     confirmTitle.textContent = title;
     confirmMessage.textContent = message;
-    
+
     modal.classList.add('show');
-    
+
     confirmOkBtn.onclick = function() {
         modal.classList.remove('show');
         if (onConfirm) onConfirm();
     };
-    
+
     confirmCancelBtn.onclick = function() {
         modal.classList.remove('show');
         if (onCancel) onCancel();
     };
-    
+
     // Close on background click
     modal.onclick = function(e) {
         if (e.target === modal) {
@@ -125,20 +125,20 @@ function showConfirmModal(title, message, onConfirm, onCancel = null) {
     };
 }
 
-// Initialize dashboard
 document.addEventListener('DOMContentLoaded', function() {
     // Check if just logged in and show toast
-    if (localStorage.getItem('justLoggedIn') === 'true') {
-        localStorage.removeItem('justLoggedIn');
+    if (sessionStorage.getItem('justLoggedIn') === 'true') {
+        sessionStorage.removeItem('justLoggedIn');
         showToast('Login successful! Welcome back.', 'success');
     }
-    
+
     // Set user name
-    const userName = localStorage.getItem('userName') || 'User';
+    const userName = sessionStorage.getItem('userName') || 'User';
     document.getElementById('userName').textContent = userName;
-    
-    // Load user reports
+
+    // Load initial data
     loadUserReports();
+    loadUserStats();
     loadStatistics();
     
     // Handle window resize for sidebar
@@ -162,12 +162,12 @@ function showSection(section) {
     document.querySelectorAll('.content-section').forEach(s => {
         s.classList.remove('active');
     });
-    
+
     // Remove active from menu items
     document.querySelectorAll('.menu-item').forEach(item => {
         item.classList.remove('active');
     });
-    
+
     // Show selected section
     const sectionMap = {
         'detect': 'detectSection',
@@ -175,9 +175,9 @@ function showSection(section) {
         'map': 'mapSection',
         'stats': 'statsSection'
     };
-    
+
     document.getElementById(sectionMap[section]).classList.add('active');
-    
+
     // Add active to clicked menu item
     event.currentTarget.classList.add('active');
     
@@ -198,12 +198,7 @@ function handleImageUpload(event) {
     if (file) {
         const reader = new FileReader();
         reader.onload = function(e) {
-            currentImage = e.target.result;
-            const previewImg = document.getElementById('previewImage');
-            previewImg.src = currentImage;
-            
-            // Show preview, hide upload box
-            document.querySelector('.upload-box').style.display = 'none';
+            document.getElementById('previewImage').src = e.target.result;
             document.getElementById('previewContainer').classList.remove('hidden');
             document.getElementById('resultsContainer').classList.add('hidden');
         };
@@ -211,147 +206,150 @@ function handleImageUpload(event) {
     }
 }
 
-// Analyze image (simulation)
+// Analyze image (mock implementation)
 function analyzeImage() {
-    if (!currentImage) return;
-    
-    // Show loading state
-    const analyzeBtn = document.querySelector('.analyze-btn');
-    const originalText = analyzeBtn.innerHTML;
-    analyzeBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Analyzing...';
-    analyzeBtn.disabled = true;
-    
-    // Simulate detection with random results
+    // Show loading
+    showToast('Analyzing image...', 'info');
+
+    // Mock analysis delay
     setTimeout(() => {
-        const potholeCount = Math.floor(Math.random() * 5) + 1;
-        const severities = ['low', 'medium', 'high'];
-        const severity = severities[Math.floor(Math.random() * severities.length)];
-        const confidence = (Math.random() * 20 + 80).toFixed(1);
-        
-        detectionResults = {
-            count: potholeCount,
-            severity: severity,
-            confidence: confidence,
-            timestamp: new Date().toISOString(),
-            image: currentImage
+        // Mock results
+        const results = {
+            count: Math.floor(Math.random() * 5) + 1,
+            severity: ['low', 'medium', 'high'][Math.floor(Math.random() * 3)],
+            confidence: Math.floor(Math.random() * 30) + 70
         };
-        
-        // Display results
-        document.getElementById('potholeCount').textContent = potholeCount;
-        const severityEl = document.getElementById('severity');
-        severityEl.textContent = severity.charAt(0).toUpperCase() + severity.slice(1);
-        severityEl.className = 'value severity ' + severity;
-        document.getElementById('confidence').textContent = confidence + '%';
-        
-        // Show results container
+
+        document.getElementById('potholeCount').textContent = results.count;
+        document.getElementById('severity').textContent = results.severity;
+        document.getElementById('severity').className = `value severity ${results.severity}`;
+        document.getElementById('confidence').textContent = `${results.confidence}%`;
+
         document.getElementById('resultsContainer').classList.remove('hidden');
-        
-        // Reset button
-        analyzeBtn.innerHTML = originalText;
-        analyzeBtn.disabled = false;
+        showToast('Analysis complete!', 'success');
     }, 2000);
 }
 
 // Submit report
-function submitReport() {
-    if (!detectionResults) return;
-    
-    const location = document.getElementById('locationInput').value || 'Location not specified';
-    
-    // Get existing reports
-    let reports = JSON.parse(localStorage.getItem('potholeReports') || '[]');
-    
-    // Add new report
-    const report = {
-        id: Date.now(),
-        user: localStorage.getItem('userName') || 'User',
-        email: localStorage.getItem('userEmail') || '',
-        location: location,
-        count: detectionResults.count,
-        severity: detectionResults.severity,
-        confidence: detectionResults.confidence,
-        image: detectionResults.image,
-        timestamp: detectionResults.timestamp,
-        status: 'pending'
-    };
-    
-    reports.push(report);
-    localStorage.setItem('potholeReports', JSON.stringify(reports));
-    
-    // Show success message
-    showModal('Success', 'Report submitted successfully!', 'success', function() {
-        // Reset form
-        document.querySelector('.upload-box').style.display = 'block';
-        document.getElementById('previewContainer').classList.add('hidden');
-        document.getElementById('resultsContainer').classList.add('hidden');
-        document.getElementById('locationInput').value = '';
-        document.getElementById('imageUpload').value = '';
-        currentImage = null;
-        detectionResults = null;
-        
-        // Refresh reports and stats
-        loadUserReports();
-        loadStatistics();
-    });
+async function submitReport() {
+    const userId = sessionStorage.getItem('userId');
+    const location = document.getElementById('locationInput').value || 'Unknown location';
+    const count = parseInt(document.getElementById('potholeCount').textContent);
+    const severity = document.getElementById('severity').textContent;
+    const confidence = parseInt(document.getElementById('confidence').textContent);
+    const image = document.getElementById('previewImage').src;
+
+    if (!userId) {
+        showModal('Error', 'User not logged in', 'error');
+        return;
+    }
+
+    try {
+        const response = await fetch('http://localhost:3000/api/reports', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({
+                userId: parseInt(userId),
+                location,
+                count,
+                severity,
+                confidence,
+                image
+            })
+        });
+
+        const result = await response.json();
+
+        if (result.success) {
+            showModal('Success', 'Report submitted successfully!', 'success', function() {
+                // Reset form
+                document.getElementById('imageUpload').value = '';
+                document.getElementById('previewContainer').classList.add('hidden');
+                document.getElementById('resultsContainer').classList.add('hidden');
+                document.getElementById('locationInput').value = '';
+
+                // Reload data
+                loadUserReports();
+                loadUserStats();
+            });
+        } else {
+            showModal('Error', result.message || 'Failed to submit report', 'error');
+        }
+    } catch (error) {
+        showModal('Error', 'Unable to connect to server. Please make sure the server is running.', 'error');
+    }
 }
 
 // Load user reports
-function loadUserReports() {
-    const reports = JSON.parse(localStorage.getItem('potholeReports') || '[]');
-    const userEmail = localStorage.getItem('userEmail');
-    const userReports = reports.filter(r => r.email === userEmail);
-    
-    const reportsList = document.getElementById('reportsList');
-    
-    if (userReports.length === 0) {
-        reportsList.innerHTML = '<p style="text-align: center; color: #999; padding: 40px;">No reports yet. Start by detecting potholes!</p>';
-        return;
+async function loadUserReports() {
+    const userId = sessionStorage.getItem('userId');
+    if (!userId) return;
+
+    try {
+        const response = await fetch(`http://localhost:3000/api/reports/user/${userId}`);
+        const result = await response.json();
+
+        if (result.success) {
+            const reportsList = document.getElementById('reportsList');
+            if (result.reports.length === 0) {
+                reportsList.innerHTML = '<p style="text-align: center; color: #999;">No reports found</p>';
+                return;
+            }
+
+            reportsList.innerHTML = result.reports.map(report => `
+                <div class="report-card">
+                    <div class="report-header">
+                        <h4>Report #${report.id}</h4>
+                        <span class="report-status ${report.status}">${report.status}</span>
+                    </div>
+                    <div class="report-details">
+                        <p><strong>Location:</strong> ${report.location}</p>
+                        <p><strong>Potholes:</strong> ${report.count}</p>
+                        <p><strong>Severity:</strong> <span class="severity ${report.severity}">${report.severity}</span></p>
+                        <p><strong>Confidence:</strong> ${report.confidence}%</p>
+                        <p><strong>Date:</strong> ${new Date(report.createdAt).toLocaleDateString()}</p>
+                    </div>
+                    ${report.image ? `<img src="${report.image}" alt="Report image" class="report-image">` : ''}
+                </div>
+            `).join('');
+        }
+    } catch (error) {
+        console.error('Error loading reports:', error);
     }
-    
-    reportsList.innerHTML = userReports.map(report => `
-        <div class="report-item">
-            <img src="${report.image}" alt="Pothole">
-            <div class="report-info">
-                <h4>Report #${report.id}</h4>
-                <p><i class="fas fa-map-marker-alt"></i> ${report.location}</p>
-                <p><i class="fas fa-exclamation-triangle"></i> ${report.count} pothole(s) detected</p>
-                <p><i class="fas fa-calendar"></i> ${new Date(report.timestamp).toLocaleString()}</p>
-            </div>
-            <span class="report-status ${report.status}">${report.status}</span>
-        </div>
-    `).join('');
 }
 
-// Load statistics
-function loadStatistics() {
-    const reports = JSON.parse(localStorage.getItem('potholeReports') || '[]');
-    const userEmail = localStorage.getItem('userEmail');
-    const userReports = reports.filter(r => r.email === userEmail);
-    
-    const totalReports = userReports.length;
-    const resolvedReports = userReports.filter(r => r.status === 'resolved').length;
-    const pendingReports = userReports.filter(r => r.status === 'pending').length;
-    
-    document.getElementById('totalReports').textContent = totalReports;
-    document.getElementById('resolvedReports').textContent = resolvedReports;
-    document.getElementById('pendingReports').textContent = pendingReports;
-    
-    // Calculate rank based on total reports
-    const allUsers = [...new Set(reports.map(r => r.email))];
-    const userCounts = allUsers.map(email => ({
-        email: email,
-        count: reports.filter(r => r.email === email).length
-    })).sort((a, b) => b.count - a.count);
-    
-    const rank = userCounts.findIndex(u => u.email === userEmail) + 1;
-    document.getElementById('userRank').textContent = rank > 0 ? `#${rank}` : '-';
+// Load user statistics
+async function loadUserStats() {
+    const userId = sessionStorage.getItem('userId');
+    if (!userId) return;
+
+    try {
+        const response = await fetch(`http://localhost:3000/api/reports/user/${userId}`);
+        const result = await response.json();
+
+        if (result.success) {
+            const reports = result.reports;
+            const total = reports.length;
+            const resolved = reports.filter(r => r.status === 'resolved').length;
+            const pending = reports.filter(r => r.status === 'pending').length;
+
+            document.getElementById('totalReports').textContent = total;
+            document.getElementById('resolvedReports').textContent = resolved;
+            document.getElementById('pendingReports').textContent = pending;
+            document.getElementById('userRank').textContent = 'Top Contributor'; // Mock rank
+        }
+    } catch (error) {
+        console.error('Error loading stats:', error);
+    }
 }
 
 // Logout
 function logout() {
     showConfirmModal('Logout', 'Are you sure you want to logout?', function() {
-        localStorage.setItem('justLoggedOut', 'true');
-        localStorage.removeItem('userType');
+        sessionStorage.setItem('justLoggedOut', 'true');
+        sessionStorage.clear();
         window.location.href = 'index.html';
     });
 }
