@@ -1,5 +1,23 @@
 // Admin panel functionality
 
+// Toggle Sidebar for Mobile
+function toggleSidebar() {
+    const sidebar = document.querySelector('.sidebar');
+    const overlay = document.querySelector('.sidebar-overlay');
+    
+    if (sidebar && overlay) {
+        sidebar.classList.toggle('active');
+        overlay.classList.toggle('active');
+        
+        // Prevent body scroll when sidebar is open
+        if (sidebar.classList.contains('active')) {
+            document.body.style.overflow = 'hidden';
+        } else {
+            document.body.style.overflow = '';
+        }
+    }
+}
+
 // Toast Notification Function
 function showToast(message, type = 'success', duration = 3000) {
     const container = document.getElementById('toastContainer');
@@ -121,6 +139,20 @@ document.addEventListener('DOMContentLoaded', function() {
     loadAllReports();
     loadAllUsers();
     loadRecentActivity();
+    
+    // Handle window resize for sidebar
+    window.addEventListener('resize', function() {
+        const isMobile = window.innerWidth <= 768 || (window.innerWidth <= 1024 && window.innerHeight <= 768 && window.matchMedia('(orientation: landscape)').matches);
+        if (!isMobile) {
+            const sidebar = document.querySelector('.sidebar');
+            const overlay = document.querySelector('.sidebar-overlay');
+            if (sidebar && sidebar.classList.contains('active')) {
+                sidebar.classList.remove('active');
+                overlay.classList.remove('active');
+                document.body.style.overflow = '';
+            }
+        }
+    });
 });
 
 // Show admin section
@@ -148,6 +180,16 @@ function showAdminSection(section) {
     
     // Add active to clicked menu item
     event.currentTarget.classList.add('active');
+    
+    // Close sidebar on mobile after selection
+    const isMobile = window.innerWidth <= 768 || (window.innerWidth <= 1024 && window.innerHeight <= 768 && window.matchMedia('(orientation: landscape)').matches);
+    if (isMobile) {
+        const sidebar = document.querySelector('.sidebar');
+        const overlay = document.querySelector('.sidebar-overlay');
+        if (sidebar && sidebar.classList.contains('active')) {
+            toggleSidebar();
+        }
+    }
 }
 
 // Load admin overview

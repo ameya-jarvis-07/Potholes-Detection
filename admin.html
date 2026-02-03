@@ -9,6 +9,9 @@
 </head>
 <body>
     <nav class="navbar">
+        <button class="hamburger-btn" onclick="toggleSidebar()" aria-label="Toggle menu">
+            <i class="fas fa-bars"></i>
+        </button>
         <div class="nav-brand">
             <i class="fas fa-road"></i>
             <span>Admin Panel</span>
@@ -20,6 +23,7 @@
     </nav>
 
     <div class="dashboard-container">
+        <div class="sidebar-overlay" onclick="toggleSidebar()"></div>
         <aside class="sidebar">
             <ul class="menu">
                 <li class="menu-item active" onclick="showAdminSection('overview')">

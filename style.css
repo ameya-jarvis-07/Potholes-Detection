@@ -220,7 +220,8 @@ body {
 
 @media (max-width: 768px) {
     .login-box {
-        padding: 30px 25px;
+        padding: 25px 20px;
+        max-width: 100%;
     }
     
     .form-row {
@@ -229,7 +230,32 @@ body {
     }
     
     .logo h1 {
-        font-size: 24px;
+        font-size: 22px;
+    }
+    
+    .logo i {
+        font-size: 40px;
+    }
+    
+    .tab-btn {
+        padding: 10px 15px;
+        font-size: 14px;
+    }
+    
+    .login-form h2 {
+        font-size: 20px;
+    }
+    
+    .form-subtitle {
+        font-size: 13px;
+    }
+    
+    .password-requirements {
+        padding: 12px;
+    }
+    
+    .requirement {
+        font-size: 12px;
     }
 }
 
@@ -248,6 +274,27 @@ body {
     right: 0;
     z-index: 1000;
     height: 60px;
+}
+
+.hamburger-btn {
+    display: none;
+    background: none;
+    border: none;
+    font-size: 24px;
+    color: #667eea;
+    cursor: pointer;
+    padding: 5px 10px;
+    transition: color 0.3s ease;
+}
+
+.hamburger-btn:hover {
+    color: #764ba2;
+}
+
+.hamburger-btn:focus {
+    outline: 2px solid #667eea;
+    outline-offset: 2px;
+    border-radius: 4px;
 }
 
 .nav-brand {
@@ -298,12 +345,30 @@ body {
     min-height: calc(100vh - 60px);
     background: #f5f7fa;
     margin-top: 60px;
+    position: relative;
 }
 
 .sidebar {
     width: 250px;
     background: white;
     box-shadow: 2px 0 10px rgba(0, 0, 0, 0.1);
+    transition: transform 0.3s ease;
+    position: relative;
+    transform: translateX(0);
+}
+
+.sidebar-overlay {
+    display: none;
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: rgba(0, 0, 0, 0.5);
+    z-index: 998;
+    opacity: 0;
+    transition: opacity 0.3s ease;
+    pointer-events: none;
 }
 
 .menu {
@@ -952,37 +1017,482 @@ body {
 }
 
 /* Responsive Design */
-@media (max-width: 768px) {
+@media (max-width: 768px), (max-width: 1024px) and (orientation: landscape) and (max-height: 768px) {
+    /* Navbar Mobile */
+    .navbar {
+        padding: 12px 15px;
+        height: auto;
+        flex-wrap: nowrap;
+        gap: 10px;
+    }
+    
+    .hamburger-btn {
+        display: block;
+        order: -1;
+    }
+    
+    .nav-brand {
+        font-size: 18px;
+        flex: 1;
+    }
+    
+    .nav-brand i {
+        font-size: 24px;
+    }
+    
+    .nav-user {
+        gap: 10px;
+    }
+    
+    .nav-user span {
+        display: none;
+    }
+    
+    .logout-btn {
+        padding: 8px 15px;
+        font-size: 14px;
+    }
+    
+    /* Dashboard Container Mobile */
     .dashboard-container {
-        flex-direction: column;
+        margin-top: 50px;
     }
 
     .sidebar {
-        width: 100%;
+        position: fixed;
+        left: 0;
+        top: 50px;
+        bottom: 0;
+        width: 280px;
+        max-width: 85%;
+        z-index: 999;
+        transform: translateX(-100%);
+        box-shadow: 2px 0 10px rgba(0, 0, 0, 0.2);
+    }
+    
+    .sidebar.active {
+        transform: translateX(0);
+    }
+    
+    .sidebar-overlay.active {
+        display: block;
+        opacity: 1;
+        pointer-events: all;
     }
 
     .menu {
         display: flex;
-        overflow-x: auto;
-        padding: 10px;
+        flex-direction: column;
+        padding: 0;
+        overflow-y: auto;
+        height: 100%;
     }
 
     .menu-item {
-        flex-shrink: 0;
-        padding: 10px 20px;
+        padding: 18px 20px;
+        flex-direction: row;
+        text-align: left;
+        gap: 15px;
+        border-right: none;
+        border-bottom: 1px solid #f0f0f0;
+    }
+    
+    .menu-item.active {
+        background: linear-gradient(90deg, #667eea 0%, rgba(102, 126, 234, 0.1) 100%);
+        border-right: 4px solid #667eea;
+        border-bottom: 1px solid #f0f0f0;
+    }
+    
+    .menu-item i {
+        font-size: 20px;
+    }
+    
+    .menu-item span {
+        font-size: 14
+    
+    .menu-item i {
+        font-size: 18px;
+    }
+    
+    .menu-item span {
+        font-size: 11px;
+    }
+    
+    /* Main Content Mobile */
+    .main-content {
+        padding: 15px;
+    }
+    
+    .content-section h2 {
+        font-size: 22px;
+        margin-bottom: 20px;
+    }
+    
+    /* Detection Area Mobile */
+    .detection-area {
+        padding: 20px 15px;
+    }
+    
+    .upload-box {
+        padding: 40px 15px;
+    }
+    
+    .upload-box i {
+        font-size: 48px;
+    }
+    
+    .upload-box p {
+        font-size: 16px;
+    }
+    
+    .upload-box span {
+        font-size: 12px;
+    }
+    
+    .preview-container img {
+        max-height: 300px;
+    }
+    
+    .analyze-btn {
+        padding: 12px 30px;
+        font-size: 14px;
+        width: 100%;
+    }
+    
+    /* Results Mobile */
+    .result-card {
+        padding: 20px 15px;
+    }
+    
+    .result-item {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 8px;
+    }
+    
+    .result-item .label {
+        font-size: 14px;
+    }
+    
+    .result-item .value {
+        font-size: 18px;
+    }
+    
+    .location-input {
+        flex-direction: column;
+        gap: 10px;
+    }
+    
+    .location-input input {
+        width: 100%;
+    }
+    
+    .submit-btn {
+        width: 100%;
+        justify-content: center;
+        padding: 12px 20px;
     }
 
+    /* Stats Grid Mobile */
     .stats-grid,
     .admin-stats-grid {
         grid-template-columns: 1fr;
+        gap: 15px;
+    }
+    
+    .stat-card {
+        padding: 20px;
+    }
+    
+    .stat-card i {
+        font-size: 40px;
+    }
+    
+    .stat-value,
+    .big-number {
+        font-size: 28px;
+    }
+    
+    /* Admin Stat Card Mobile */
+    .admin-stat-card {
+        flex-direction: column;
+        align-items: center;
+        text-align: center;
+        padding: 20px;
+    }
+    
+    .stat-icon {
+        width: 50px;
+        height: 50px;
+        font-size: 24px;
     }
 
+    /* Reports List Mobile */
+    .report-item {
+        flex-direction: column;
+        align-items: flex-start;
+        padding: 15px;
+    }
+    
+    .report-item img {
+        width: 100%;
+        height: auto;
+        max-height: 200px;
+    }
+    
+    .report-info h4 {
+        font-size: 16px;
+    }
+    
+    .report-info p {
+        font-size: 13px;
+    }
+
+    /* Filters Mobile */
     .filters {
         flex-direction: column;
+        gap: 10px;
+    }
+    
+    .filters select,
+    .filters input {
+        width: 100%;
+        padding: 10px;
+        font-size: 14px;
     }
 
+    /* Table Mobile */
+    .table-container {
+        padding: 15px 10px;
+        overflow-x: auto;
+        -webkit-overflow-scrolling: touch;
+    }
+    
+    .reports-table {
+        font-size: 12px;
+    }
+    
+    .reports-table th,
+    .reports-table td {
+        padding: 10px 8px;
+        white-space: nowrap;
+    }
+    
+    .action-btn {
+        padding: 4px 10px;
+        font-size: 11px;
+        margin: 2px;
+        display: inline-block;
+    }
+
+    /* Charts Mobile */
     .charts-container {
         grid-template-columns: 1fr;
+        gap: 15px;
+    }
+    
+    .chart-card {
+        padding: 20px 15px;
+    }
+    
+    .chart-placeholder {
+        height: 250px;
+    }
+    
+    .chart-placeholder i {
+        font-size: 48px;
+    }
+    
+    /* Map Mobile */
+    .map-container {
+        padding: 15px;
+    }
+    
+    .map-view {
+        height: 350px;
+    }
+    
+    .map-placeholder i {
+        font-size: 60px;
+    }
+    
+    .map-placeholder p {
+        font-size: 16px;
+    }
+    
+    /* Activity List Mobile */
+    .recent-activity {
+        padding: 20px 15px;
+    }
+    
+    .activity-item {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 8px;
+        padding: 12px;
+    }
+    
+    .activity-item p {
+        font-size: 13px;
+    }
+    
+    /* Settings Mobile */
+    .settings-form {
+        padding: 20px 15px;
+    }
+    
+    .setting-group h3 {
+        font-size: 18px;
+    }
+    
+    .save-settings-btn {
+        width: 100%;
+        justify-content: center;
+    }
+    
+    /* Modal Mobile */
+    .modal-content {
+        width: 95%;
+        max-width: none;
+        margin: 10px;
+    }
+    
+    .modal-header {
+        padding: 20px 15px;
+    }
+    
+    .modal-header h3 {
+        font-size: 18px;
+    }
+    
+    .modal-icon {
+        font-size: 28px;
+    }
+    
+    .modal-body {
+        padding: 20px 15px;
+    }
+    
+    .modal-body p {
+        font-size: 14px;
+    }
+    
+    .modal-footer {
+        padding: 15px;
+        flex-direction: column;
+    }
+    
+    .modal-btn {
+        width: 100%;
+    }
+    
+    /* Toast Mobile */
+    .toast-container {
+        right: 10px;
+        left: 10px;
+        top: 10px;
+    }
+    
+    .toast {
+        min-width: auto;
+        width: 100%;
+        padding: 12px 16px;
+        font-size: 13px;
+    }
+    
+    .toast-icon {
+        font-size: 20px;
+    }
+    
+    .toast-title {
+        font-size: 13px;
+    }
+    
+    .toast-message {
+        font-size: 12px;
+    }
+}
+
+/* Extra Small Devices */
+@media (max-width: 480px), (max-width: 896px) and (orientation: landscape) and (max-height: 480px) {
+    body {
+        font-size: 14px;
+    }
+    
+    .login-box {
+        padding: 20px 15px;
+    }
+    
+    .logo h1 {
+        font-size: 20px;
+    }
+    
+    .logo i {
+        font-size: 36px;
+    }
+    
+    .tab-buttons {
+        gap: 5px;
+        padding: 3px;
+    }
+    
+    .tab-btn {
+        padding: 10px;
+        font-size: 13px;
+    }
+    
+    .navbar {
+        padding: 10px;
+    }
+    
+    .nav-brand {
+        font-size: 16px;
+    }
+    
+    .nav-brand i {
+        font-size: 20px;
+    }
+    
+    .logout-btn {
+        padding: 6px 12px;
+        font-size: 12px;
+    }
+    
+    .main-content {
+        padding: 10px;
+    }
+    
+    .content-section h2 {
+        font-size: 20px;
+    }
+    
+    .detection-area {
+        padding: 15px 10px;
+    }
+    
+    .upload-box {
+        padding: 30px 10px;
+    }
+    
+    .upload-box i {
+        font-size: 40px;
+    }
+    
+    .upload-box p {
+        font-size: 14px;
+    }
+    
+    .stat-card {
+        padding: 15px;
+    }
+    
+    .menu-item {
+        min-width: 70px;
+        padding: 10px;
+    }
+    
+    .menu-item span {
+        font-size: 10px;
     }
 }
 
