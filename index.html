@@ -3,144 +3,153 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Pothole Detection System - Login</title>
+    <title>RoadGuard - Smart Pothole Detection System</title>
     <link rel="stylesheet" href="style.css">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;600;700&display=swap" rel="stylesheet">
 </head>
 <body>
-    <div class="login-container">
-        <div class="login-box">
-            <div class="logo">
+    <!-- Navbar -->
+    <nav class="main-navbar">
+        <div class="nav-container">
+            <div class="nav-logo">
                 <i class="fas fa-road"></i>
-                <h1>Pothole Detection System</h1>
-                <p class="subtitle">Report and track road infrastructure issues</p>
+                <span>RoadGuard</span>
             </div>
-            
-            <div class="tab-buttons">
-                <button class="tab-btn active" onclick="showTab('user')">User Login</button>
-                <button class="tab-btn" onclick="showTab('admin')">Admin Login</button>
+            <ul class="nav-links">
+                <li><a href="#home">Home</a></li>
+                <li><a href="#features">Features</a></li>
+                <li><a href="#how-it-works">How it Works</a></li>
+                <li><a href="auth.html" class="nav-cta">Login / Signup</a></li>
+            </ul>
+            <div class="nav-toggle" id="navToggle">
+                <i class="fas fa-bars"></i>
             </div>
-
-            <!-- User Login Form -->
-            <form id="userLoginForm" class="login-form active">
-                <h2>User Login</h2>
-                <p class="form-subtitle">Access your account to report potholes</p>
-                
-                <div class="form-group">
-                    <label for="userEmailOrUsername">Email or Username</label>
-                    <input type="text" id="userEmailOrUsername" placeholder="your.email@example.com or username" required>
-                </div>
-                <div class="form-group">
-                    <label for="userPassword">Password</label>
-                    <input type="password" id="userPassword" placeholder="Enter your password" required>
-                </div>
-                <button type="submit" class="login-btn">Login</button>
-                <p class="signup-link">Don't have an account? <a href="#" onclick="showSignup()">Sign up</a></p>
-            </form>
-
-            <!-- Admin Login Form -->
-            <form id="adminLoginForm" class="login-form">
-                <h2>Admin Login</h2>
-                <p class="form-subtitle">Government agency access</p>
-                
-                <div class="form-group">
-                    <label for="adminEmailOrUsername">Email or Username</label>
-                    <input type="text" id="adminEmailOrUsername" placeholder="admin@agency.gov.in or username" required>
-                </div>
-                <div class="form-group">
-                    <label for="adminPassword">Password</label>
-                    <input type="password" id="adminPassword" placeholder="Enter your password" required>
-                </div>
-                <button type="submit" class="login-btn">Login as Admin</button>
-                <p class="signup-link">Need admin account? <a href="#" onclick="showAdminSignup()">Sign up</a></p>
-            </form>
-
-            <!-- Admin Signup Form -->
-            <form id="adminSignupForm" class="login-form">
-                <h2>Register Your Agency</h2>
-                <p class="form-subtitle">Government agency registration</p>
-                
-                <div class="form-row">
-                    <div class="form-group">
-                        <label for="adminSignupDepartment">Agency / Department Name</label>
-                        <input type="text" id="adminSignupDepartment" placeholder="Department Name" required>
-                    </div>
-                    <div class="form-group">
-                        <label for="adminSignupEmail">Official Email</label>
-                        <input type="email" id="adminSignupEmail" placeholder="official@department.gov.in" required>
-                    </div>
-                </div>
-                
-                <div class="form-row">
-                    <div class="form-group">
-                        <label for="adminSignupName">Official Name</label>
-                        <input type="text" id="adminSignupName" placeholder="Full Name" required>
-                    </div>
-                    <div class="form-group">
-                        <label for="adminSignupUsername">Username</label>
-                        <input type="text" id="adminSignupUsername" placeholder="Choose username" required>
-                    </div>
-                </div>
-                
-                <div class="form-row">
-                    <div class="form-group">
-                        <label for="adminSignupPassword">Password</label>
-                        <input type="password" id="adminSignupPassword" placeholder="Create password" required>
-                    </div>
-                    <div class="form-group">
-                        <label for="adminSignupConfirmPassword">Confirm Password</label>
-                        <input type="password" id="adminSignupConfirmPassword" placeholder="Re-enter password" required>
-                    </div>
-                </div>
-                
-                <div class="password-requirements">
-                    <p class="requirement"><i class="fas fa-check-circle"></i> At least 8 characters long</p>
-                    <p class="requirement"><i class="fas fa-check-circle"></i> Mix of uppercase and lowercase letters</p>
-                    <p class="requirement"><i class="fas fa-check-circle"></i> Includes numbers and special characters</p>
-                </div>
-                
-                <button type="submit" class="login-btn">Create Account</button>
-                <p class="signup-link">Already have admin account? <a href="#" onclick="showTab('admin')">Login</a></p>
-            </form>
-
-            <!-- User Signup Form -->
-            <form id="signupForm" class="login-form">
-                <h2>Create Account</h2>
-                <p class="form-subtitle">Join and start reporting road issues</p>
-                
-                <div class="form-row">
-                    <div class="form-group">
-                        <label for="signupName">Full Name</label>
-                        <input type="text" id="signupName" placeholder="Your Full Name" required>
-                    </div>
-                    <div class="form-group">
-                        <label for="signupEmail">Email Address</label>
-                        <input type="email" id="signupEmail" placeholder="your.email@example.com" required>
-                    </div>
-                </div>
-                
-                <div class="form-row">
-                    <div class="form-group">
-                        <label for="signupPhone">Contact Number</label>
-                        <input type="tel" id="signupPhone" placeholder="+91 1234567890" required>
-                    </div>
-                    <div class="form-group">
-                        <label for="signupPassword">Password</label>
-                        <input type="password" id="signupPassword" placeholder="Create password" required>
-                    </div>
-                </div>
-                
-                <div class="password-requirements">
-                    <p class="requirement"><i class="fas fa-check-circle"></i> At least 8 characters long</p>
-                    <p class="requirement"><i class="fas fa-check-circle"></i> Mix of uppercase and lowercase letters</p>
-                    <p class="requirement"><i class="fas fa-check-circle"></i> Includes numbers and special characters</p>
-                </div>
-                
-                <button type="submit" class="login-btn">Create Account</button>
-                <p class="signup-link">Already have an account? <a href="#" onclick="showLogin()">Login</a></p>
-            </form>
         </div>
-    </div>
+    </nav>
+
+    <!-- Hero Section -->
+    <section id="home" class="hero-section">
+        <div class="hero-content">
+            <h1 class="animate-fade-in">Smoother Roads, <span class="highlight">Smarter Cities</span></h1>
+            <p class="animate-fade-in-delay">Empowering communities to report and track road infrastructure issues in real-time. Join us in making our streets safer for everyone.</p>
+            <div class="hero-btns animate-fade-in-delay-2">
+                <a href="auth.html" class="btn btn-primary">Report a Pothole</a>
+                <a href="#features" class="btn btn-secondary">Learn More</a>
+            </div>
+        </div>
+        <div class="hero-image animate-float">
+            <img src="https://img.freepik.com/free-vector/road-maintenance-abstract-concept-vector-illustration-asphalt-paving-machine-road-repair-works-pavement-construction-city-infrastructure-restoration-street-highway-rehab-abstract-metaphor_335657-2936.jpg" alt="Road Maintenance Illustration">
+        </div>
+    </section>
+
+    <!-- Features Section -->
+    <section id="features" class="features-section">
+        <div class="section-header">
+            <h2>Key Features</h2>
+            <div class="underline"></div>
+        </div>
+        <div class="features-grid">
+            <div class="feature-card">
+                <i class="fas fa-camera"></i>
+                <h3>Easy Reporting</h3>
+                <p>Capture and upload photos of potholes directly from your mobile device with location data.</p>
+            </div>
+            <div class="feature-card">
+                <i class="fas fa-chart-line"></i>
+                <h3>Real-time Tracking</h3>
+                <p>Monitor the status of your reported issues from submission to resolution by authorities.</p>
+            </div>
+            <div class="feature-card">
+                <i class="fas fa-shield-alt"></i>
+                <h3>AI Detection</h3>
+                <p>Our intelligent system automatically categorizes and prioritizes issues based on severity.</p>
+            </div>
+            <div class="feature-card">
+                <i class="fas fa-users"></i>
+                <h3>Community Impact</h3>
+                <p>Join a network of citizens dedicated to improving urban infrastructure and safety.</p>
+            </div>
+        </div>
+    </section>
+
+    <!-- How it Works -->
+    <section id="how-it-works" class="how-it-works">
+        <div class="section-header">
+            <h2>How RoadGuard Works</h2>
+            <div class="underline"></div>
+        </div>
+        <div class="steps-container">
+            <div class="step">
+                <div class="step-number">1</div>
+                <h4>Spot it</h4>
+                <p>Notice a pothole or road damage while traveling.</p>
+            </div>
+            <div class="step">
+                <div class="step-number">2</div>
+                <h4>Snap & Report</h4>
+                <p>Take a photo and submit it via our platform with one click.</p>
+            </div>
+            <div class="step">
+                <div class="step-number">3</div>
+                <h4>AI Analysis</h4>
+                <p>RoadGuard AI verifies and logs the issue for local agencies.</p>
+            </div>
+            <div class="step">
+                <div class="step-number">4</div>
+                <h4>Resolution</h4>
+                <p>Track as authorities fix the problem and update the status.</p>
+            </div>
+        </div>
+    </section>
+
+    <!-- Footer -->
+    <footer class="main-footer">
+        <div class="footer-container">
+            <div class="footer-col">
+                <div class="nav-logo">
+                    <i class="fas fa-road"></i>
+                    <span>RoadGuard</span>
+                </div>
+                <p>Making roads safer and cities smarter through community-driven reporting and AI technology.</p>
+                <div class="social-links">
+                    <a href="#"><i class="fab fa-facebook-f"></i></a>
+                    <a href="#"><i class="fab fa-twitter"></i></a>
+                    <a href="#"><i class="fab fa-instagram"></i></a>
+                    <a href="#"><i class="fab fa-linkedin-in"></i></a>
+                </div>
+            </div>
+            <div class="footer-col">
+                <h3>Quick Links</h3>
+                <ul>
+                    <li><a href="#home">Home</a></li>
+                    <li><a href="#features">Features</a></li>
+                    <li><a href="#how-it-works">How it Works</a></li>
+                    <li><a href="auth.html">Login / Signup</a></li>
+                </ul>
+            </div>
+            <div class="footer-col">
+                <h3>Support</h3>
+                <ul>
+                    <li><a href="#">FAQ</a></li>
+                    <li><a href="#">Privacy Policy</a></li>
+                    <li><a href="#">Terms of Service</a></li>
+                    <li><a href="#">Contact Us</a></li>
+                </ul>
+            </div>
+            <div class="footer-col">
+                <h3>Contact Info</h3>
+                <ul class="contact-info">
+                    <li><i class="fas fa-map-marker-alt"></i> New Delhi, India</li>
+                    <li><i class="fas fa-phone"></i> +91 123 456 7890</li>
+                    <li><i class="fas fa-envelope"></i> support@roadguard.in</li>
+                </ul>
+            </div>
+        </div>
+        <div class="footer-bottom">
+            <p>&copy; 2024 RoadGuard. All rights reserved.</p>
+        </div>
+    </footer>
 
     <!-- Toast Container -->
     <div id="toastContainer" class="toast-container"></div>

@@ -9,12 +9,9 @@
 </head>
 <body>
     <nav class="navbar">
-        <button class="hamburger-btn" onclick="toggleSidebar()" aria-label="Toggle menu">
-            <i class="fas fa-bars"></i>
-        </button>
         <div class="nav-brand">
             <i class="fas fa-road"></i>
-            <span>Pothole Detection</span>
+            <span>RoadGuard Dashboard</span>
         </div>
         <div class="nav-user">
             <span id="userName">User</span>
@@ -145,38 +142,6 @@
 
     <!-- Toast Container -->
     <div id="toastContainer" class="toast-container"></div>
-
-    <!-- Modal Popups -->
-    <div id="messageModal" class="modal">
-        <div class="modal-content">
-            <div class="modal-header">
-                <i class="modal-icon"></i>
-                <h3 id="modalTitle">Message</h3>
-            </div>
-            <div class="modal-body">
-                <p id="modalMessage">Message content</p>
-            </div>
-            <div class="modal-footer">
-                <button id="modalOkBtn" class="modal-btn modal-btn-primary">OK</button>
-            </div>
-        </div>
-    </div>
-
-    <div id="confirmModal" class="modal">
-        <div class="modal-content">
-            <div class="modal-header">
-                <i class="modal-icon fas fa-question-circle"></i>
-                <h3 id="confirmTitle">Confirm</h3>
-            </div>
-            <div class="modal-body">
-                <p id="confirmMessage">Are you sure?</p>
-            </div>
-            <div class="modal-footer">
-                <button id="confirmCancelBtn" class="modal-btn modal-btn-secondary">Cancel</button>
-                <button id="confirmOkBtn" class="modal-btn modal-btn-primary">Confirm</button>
-            </div>
-        </div>
-    </div>
 
     <script src="dashboard.js"></script>
 </body>

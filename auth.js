@@ -1,3 +1,37 @@
+// Mobile Nav Toggle
+document.getElementById('navToggle')?.addEventListener('click', function() {
+    const navLinks = document.querySelector('.nav-links');
+    navLinks.style.display = navLinks.style.display === 'flex' ? 'none' : 'flex';
+    navLinks.style.flexDirection = 'column';
+    navLinks.style.position = 'absolute';
+    navLinks.style.top = '70px';
+    navLinks.style.left = '0';
+    navLinks.style.width = '100%';
+    navLinks.style.backgroundColor = 'var(--secondary-ivory)';
+    navLinks.style.padding = '20px';
+    navLinks.style.boxShadow = '0 10px 15px rgba(0,0,0,0.1)';
+});
+
+// Smooth Scrolling for Nav Links
+document.querySelectorAll('a[href^="#"]').forEach(anchor => {
+    anchor.addEventListener('click', function (e) {
+        e.preventDefault();
+        const target = document.querySelector(this.getAttribute('href'));
+        if (target) {
+            target.scrollIntoView({
+                behavior: 'smooth'
+            });
+            // If it's a mobile nav, close it after clicking
+            if (window.innerWidth <= 768) {
+                const navLinks = document.querySelector('.nav-links');
+                if (navLinks.style.display === 'flex') {
+                    navLinks.style.display = 'none';
+                }
+            }
+        }
+    });
+});
+
 // Toast Notification Function
 function showToast(message, type = 'success', duration = 3000) {
     const container = document.getElementById('toastContainer');
