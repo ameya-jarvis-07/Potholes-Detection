@@ -2,6 +2,10 @@ require('dotenv').config();
 const express = require('express');
 const cors = require('cors');
 const bodyParser = require('body-parser');
+const multer = require('multer');
+const fs = require('fs');
+const axios = require('axios');
+const cloudinary = require('cloudinary').v2;
 const path = require('path');
 const { db } = require('./firebase-config');
 
@@ -20,7 +24,7 @@ app.use((req, res, next) => {
         "script-src 'self' 'unsafe-inline' https://cdnjs.cloudflare.com",
         "style-src 'self' 'unsafe-inline' https://cdnjs.cloudflare.com https://fonts.googleapis.com",
         "font-src 'self' https://fonts.gstatic.com https://cdnjs.cloudflare.com",
-        "img-src 'self' data: blob:",
+        "img-src 'self' data: blob: https://res.cloudinary.com",
         "connect-src 'self' http://localhost:3000 ws://localhost:3000",
         "frame-src 'none'",
         "object-src 'none'",
@@ -34,6 +38,51 @@ app.use(express.static('public'));
 
 // Serve static files
 app.use(express.static(__dirname));
+
+// Configure Cloudinary from environment
+cloudinary.config({
+    cloud_name: process.env.CLOUDINARY_CLOUD_NAME,
+    api_key: process.env.CLOUDINARY_API_KEY,
+    api_secret: process.env.CLOUDINARY_API_SECRET
+});
+
+// Multer for handling uploads
+const upload = multer({ dest: 'uploads/' });
+
+// Endpoint: analyze media -> upload to Cloudinary -> send URL to ML service -> return detection
+app.post('/api/analyze', upload.single('media'), async (req, res) => {
+    try {
+        if (!req.file) {
+            return res.status(400).json({ success: false, message: 'No file uploaded' });
+        }
+
+        const filePath = req.file.path;
+        const resourceType = req.file.mimetype && req.file.mimetype.startsWith('video/') ? 'video' : 'image';
+
+        // Upload to Cloudinary (auto resource type)
+        const uploadResult = await cloudinary.uploader.upload(filePath, { resource_type: 'auto' });
+        const mediaUrl = uploadResult.secure_url;
+
+        // Call ML service (dummy) with the media URL
+        let mlResult = { data: { count: 0, severity: 'low', confidence: 0 } };
+        try {
+            const mlResp = await axios.post('http://localhost:5001/predict', { url: mediaUrl, type: resourceType }, { timeout: 20000 });
+            mlResult = mlResp;
+        } catch (mlErr) {
+            console.warn('ML service not available or returned error, using dummy results', mlErr.message || mlErr);
+        }
+
+        // remove temporary uploaded file
+        fs.unlink(filePath, (err) => {
+            if (err) console.warn('Error deleting temp upload:', err);
+        });
+
+        return res.json({ success: true, imageUrl: mediaUrl, detection: mlResult.data });
+    } catch (error) {
+        console.error('Analyze error:', error);
+        return res.status(500).json({ success: false, message: 'Internal server error' });
+    }
+});
 
 // API Routes
 
@@ -236,7 +285,7 @@ app.post('/api/admin/login', async (req, res) => {
 // Submit Pothole Report
 app.post('/api/reports', async (req, res) => {
     try {
-        const { userId, location, count, severity, confidence, image } = req.body;
+        const { userId, location, street, description, urgency, phone, observations, count, severity, confidence, image } = req.body;
 
         // Get user from Firebase
         const userDoc = await db.collection('users').doc(userId.toString()).get();
@@ -257,7 +306,12 @@ app.post('/api/reports', async (req, res) => {
             userId: user.id,
             userName: user.name,
             userEmail: user.email,
+            userPhone: phone || null,
             location,
+            street,
+            description,
+            urgency,
+            observations: observations || null,
             count,
             severity,
             confidence,

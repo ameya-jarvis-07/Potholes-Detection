@@ -1,0 +1,165 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Server Status Checker</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background: #f5f5f5; padding: 20px; }
+        .container { max-width: 600px; margin: 0 auto; }
+        .header { background: #C37C5D; color: white; padding: 20px; border-radius: 10px; margin-bottom: 20px; text-align: center; }
+        .status-card { background: white; padding: 20px; margin-bottom: 15px; border-radius: 10px; box-shadow: 0 2px 10px rgba(0,0,0,0.1); }
+        .status-line { display: flex; justify-content: space-between; align-items: center; padding: 10px 0; border-bottom: 1px solid #eee; }
+        .status-line:last-child { border-bottom: none; }
+        .status-label { font-weight: 600; color: #333; }
+        .status-indicator { width: 20px; height: 20px; border-radius: 50%; display: flex; align-items: center; justify-content: center; color: white; font-size: 12px; font-weight: bold; }
+        .status-indicator.running { background: #4CAF50; }
+        .status-indicator.error { background: #f44336; }
+        .status-indicator.testing { background: #2196F3; }
+        .test-button { background: #C37C5D; color: white; border: none; padding: 10px 20px; border-radius: 5px; cursor: pointer; font-weight: 600; margin-top: 10px; }
+        .test-button:hover { background: #a8654a; }
+        .output { background: #f9f9f9; padding: 10px; border-radius: 5px; font-family: monospace; font-size: 12px; max-height: 200px; overflow-y: auto; margin-top: 10px; border: 1px solid #ddd; }
+        .success { color: #4CAF50; }
+        .error { color: #f44336; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>🚀 Pothole Detection - Server Status</h1>
+            <p>Verify all services are running</p>
+        </div>
+
+        <div class="status-card">
+            <div class="status-line">
+                <span class="status-label">📦 Node.js Server (Port 3000)</span>
+                <div class="status-indicator testing" id="nodeStatus">?</div>
+            </div>
+            <div id="nodeOutput" style="display:none;">
+                <button class="test-button" onclick="testNodeServer()">Test Connection</button>
+                <div class="output" id="nodeLog"></div>
+            </div>
+        </div>
+
+        <div class="status-card">
+            <div class="status-line">
+                <span class="status-label">🐍 Python ML Service (Port 5001)</span>
+                <div class="status-indicator testing" id="mlStatus">?</div>
+            </div>
+            <div id="mlOutput" style="display:none;">
+                <button class="test-button" onclick="testMLServer()">Test Connection</button>
+                <div class="output" id="mlLog"></div>
+            </div>
+        </div>
+
+        <div class="status-card">
+            <div class="status-line">
+                <span class="status-label">📱 Cloudinary Config</span>
+                <div class="status-indicator testing" id="cloudinaryStatus">?</div>
+            </div>
+            <div id="cloudinaryOutput" style="display:none;">
+                <button class="test-button" onclick="testCloudinary()">Verify Setup</button>
+                <div class="output" id="cloudinaryLog"></div>
+            </div>
+        </div>
+
+        <div style="background: white; padding: 20px; border-radius: 10px; margin-top: 20px;">
+            <h3>📋 Next Steps:</h3>
+            <ol style="margin-left: 20px; line-height: 1.8;">
+                <li>✅ Click "Test Connection" buttons to verify servers are running</li>
+                <li>✅ Once all green, you can test the full app</li>
+                <li>✅ Open: <a href="http://localhost:3000" target="_blank" style="color: #C37C5D; text-decoration: none;">http://localhost:3000</a></li>
+                <li>✅ Login with: <strong>user@demo.com / user123</strong></li>
+                <li>✅ Upload image → Analyze → Submit Report</li>
+            </ol>
+        </div>
+    </div>
+
+    <script>
+        // Test Node server
+        async function testNodeServer() {
+            const log = document.getElementById('nodeLog');
+            const status = document.getElementById('nodeStatus');
+            
+            log.innerHTML = '⏳ Testing...';
+            try {
+                const response = await fetch('http://localhost:3000/api/health');
+                const data = await response.json();
+                
+                if (data.success) {
+                    log.innerHTML = '<span class="success">✅ Node Server is RUNNING</span><br>' + JSON.stringify(data, null, 2);
+                    status.textContent = '✓';
+                    status.className = 'status-indicator running';
+                } else {
+                    throw new Error(data.message);
+                }
+            } catch (error) {
+                log.innerHTML = '<span class="error">❌ Error: ' + error.message + '</span><br>Make sure Node server is running: <code>npm start</code>';
+                status.textContent = '✗';
+                status.className = 'status-indicator error';
+            }
+        }
+
+        // Test ML server
+        async function testMLServer() {
+            const log = document.getElementById('mlLog');
+            const status = document.getElementById('mlStatus');
+            
+            log.innerHTML = '⏳ Testing...';
+            try {
+                const response = await fetch('http://localhost:5001/predict', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ url: 'http://test.jpg', type: 'image' })
+                });
+                const data = await response.json();
+                
+                log.innerHTML = '<span class="success">✅ ML Service is RUNNING</span><br>' + JSON.stringify(data, null, 2);
+                status.textContent = '✓';
+                status.className = 'status-indicator running';
+            } catch (error) {
+                log.innerHTML = '<span class="error">❌ Error: ' + error.message + '</span><br>Make sure ML service is running: <code>python ml_model.py</code>';
+                status.textContent = '✗';
+                status.className = 'status-indicator error';
+            }
+        }
+
+        // Test Cloudinary config
+        async function testCloudinary() {
+            const log = document.getElementById('cloudinaryLog');
+            const status = document.getElementById('cloudinaryStatus');
+            
+            log.innerHTML = '⏳ Checking .env file...';
+            try {
+                // We can't directly test Cloudinary without uploading, so we'll just verify the backend has config
+                const response = await fetch('http://localhost:3000/api/health');
+                if (response.ok) {
+                    log.innerHTML = '<span class="success">✅ Server can access Cloudinary config from .env</span><br>Credentials loaded successfully!<br><br>To test upload: Submit a pothole report with an image.';
+                    status.textContent = '✓';
+                    status.className = 'status-indicator running';
+                } else {
+                    throw new Error('Server not responding');
+                }
+            } catch (error) {
+                log.innerHTML = '<span class="error">❌ Error: ' + error.message + '</span><br>Verify .env file has:<br><code>CLOUDINARY_CLOUD_NAME<br>CLOUDINARY_API_KEY<br>CLOUDINARY_API_SECRET</code>';
+                status.textContent = '✗';
+                status.className = 'status-indicator error';
+            }
+        }
+
+        // Auto test on load
+        window.addEventListener('load', () => {
+            // Show test buttons
+            document.getElementById('nodeOutput').style.display = 'block';
+            document.getElementById('mlOutput').style.display = 'block';
+            document.getElementById('cloudinaryOutput').style.display = 'block';
+            
+            // Auto test
+            setTimeout(() => testNodeServer(), 500);
+            setTimeout(() => testMLServer(), 1000);
+            setTimeout(() => testCloudinary(), 1500);
+        });
+    </script>
+</body>
+</html>

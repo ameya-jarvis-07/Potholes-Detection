@@ -80,8 +80,35 @@
                                 <span class="value" id="confidence">-</span>
                             </div>
                         </div>
-                        <div class="location-input">
-                            <input type="text" id="locationInput" placeholder="Enter location (optional)">
+                        <div class="report-form">
+                            <div class="form-group">
+                                <label for="locationInput">Location <span class="required">*</span></label>
+                                <input type="text" id="locationInput" placeholder="Enter general location or address" required>
+                            </div>
+                            <div class="form-group">
+                                <label for="streetInput">Street/Road Name <span class="required">*</span></label>
+                                <input type="text" id="streetInput" placeholder="Enter street or road name" required>
+                            </div>
+                            <div class="form-group">
+                                <label for="descriptionInput">Description <span class="required">*</span></label>
+                                <textarea id="descriptionInput" placeholder="Describe the pothole condition and any visible damage..." rows="4" required></textarea>
+                            </div>
+                            <div class="form-group">
+                                <label for="urgencyInput">Urgency Level</label>
+                                <select id="urgencyInput">
+                                    <option value="low">Low - Can wait</option>
+                                    <option value="medium" selected>Medium - Should be fixed soon</option>
+                                    <option value="high">High - Immediate attention needed</option>
+                                </select>
+                            </div>
+                            <div class="form-group">
+                                <label for="phoneInput">Contact Phone (Optional)</label>
+                                <input type="tel" id="phoneInput" placeholder="Enter your phone number">
+                            </div>
+                            <div class="form-group">
+                                <label for="observationsInput">Additional Observations</label>
+                                <textarea id="observationsInput" placeholder="Any other relevant details about the pothole or surrounding area..." rows="3"></textarea>
+                            </div>
                             <button onclick="submitReport()" class="submit-btn">
                                 <i class="fas fa-paper-plane"></i> Submit Report
                             </button>
@@ -143,6 +170,39 @@
 
     <!-- Toast Container -->
     <div id="toastContainer" class="toast-container"></div>
+
+    <!-- Message Modal -->
+    <div id="messageModal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <i class="modal-icon"></i>
+                <h3 id="modalTitle">Message</h3>
+            </div>
+            <div class="modal-body">
+                <p id="modalMessage">Message content</p>
+            </div>
+            <div class="modal-footer">
+                <button id="modalOkBtn" class="modal-btn modal-btn-primary">OK</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Confirm Modal -->
+    <div id="confirmModal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <i class="modal-icon fas fa-question-circle"></i>
+                <h3 id="confirmTitle">Confirm</h3>
+            </div>
+            <div class="modal-body">
+                <p id="confirmMessage">Are you sure?</p>
+            </div>
+            <div class="modal-footer">
+                <button id="confirmCancelBtn" class="modal-btn modal-btn-secondary">Cancel</button>
+                <button id="confirmOkBtn" class="modal-btn modal-btn-primary">Confirm</button>
+            </div>
+        </div>
+    </div>
 
     <script src="dashboard.js"></script>
 </body>

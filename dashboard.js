@@ -139,7 +139,6 @@ document.addEventListener('DOMContentLoaded', function() {
     // Load initial data
     loadUserReports();
     loadUserStats();
-    loadStatistics();
     
     // Handle window resize for sidebar
     window.addEventListener('resize', function() {
@@ -280,24 +279,33 @@ function handleImageUpload(event) {
     handleMediaUpload(event);
 }
 
-// Analyze image or video (mock implementation)
-function analyzeMedia() {
+// Analyze image or video (uploads to backend -> Cloudinary -> ML)
+async function analyzeMedia() {
     if (!currentImage) {
         showToast('Please upload a file first.', 'warning');
         return;
     }
-    // Show loading
     const fileType = currentImage.type.startsWith('video/') ? 'video' : 'image';
-    showToast(`Analyzing ${fileType}...`, 'info');
+    showToast(`Uploading ${fileType} for analysis...`, 'info');
 
-    // Mock analysis delay
-    setTimeout(() => {
-        // Mock results
-        const results = {
-            count: Math.floor(Math.random() * 5) + 1,
-            severity: ['low', 'medium', 'high'][Math.floor(Math.random() * 3)],
-            confidence: Math.floor(Math.random() * 30) + 70
-        };
+    try {
+        const formData = new FormData();
+        formData.append('media', currentImage);
+
+        const resp = await fetch('http://localhost:3000/api/analyze', {
+            method: 'POST',
+            body: formData
+        });
+
+        const result = await resp.json();
+        console.log('Analyze response:', result); // DEBUG
+        
+        if (!result.success) {
+            showToast(result.message || 'Analysis failed', 'error');
+            return;
+        }
+
+        const results = result.detection || { count: 0, severity: 'low', confidence: 0 };
 
         document.getElementById('potholeCount').textContent = results.count;
         document.getElementById('severity').textContent = results.severity;
@@ -305,11 +313,18 @@ function analyzeMedia() {
         document.getElementById('confidence').textContent = `${results.confidence}%`;
 
         document.getElementById('resultsContainer').classList.remove('hidden');
-        
+
         detectionResults = results;
-        const fileType = currentImage.type.startsWith('video/') ? 'video' : 'image';
+        // store uploaded media URL for report submission
+        currentImage.uploadedUrl = result.imageUrl;
+        
+        console.log('Stored image URL:', result.imageUrl); // DEBUG
+
         showToast(`${fileType.charAt(0).toUpperCase() + fileType.slice(1)} analysis complete!`, 'success');
-    }, 2000);
+    } catch (err) {
+        console.error('Analyze error:', err);
+        showToast('Unable to analyze file. Make sure the server is running.', 'error');
+    }
 }
 
 // Backward compatibility for old function name
@@ -320,11 +335,37 @@ function analyzeImage() {
 // Submit report
 async function submitReport() {
     const userId = sessionStorage.getItem('userId');
-    const location = document.getElementById('locationInput').value || 'Unknown location';
+    const location = document.getElementById('locationInput').value && document.getElementById('locationInput').value.trim();
+    const street = document.getElementById('streetInput').value && document.getElementById('streetInput').value.trim();
+    const description = document.getElementById('descriptionInput').value && document.getElementById('descriptionInput').value.trim();
+    const urgency = document.getElementById('urgencyInput').value;
+    const phone = document.getElementById('phoneInput').value && document.getElementById('phoneInput').value.trim();
+    const observations = document.getElementById('observationsInput').value && document.getElementById('observationsInput').value.trim();
     const count = parseInt(document.getElementById('potholeCount').textContent);
     const severity = document.getElementById('severity').textContent;
     const confidence = parseInt(document.getElementById('confidence').textContent);
-    const image = document.getElementById('previewImage').src;
+    const image = currentImage && currentImage.uploadedUrl ? currentImage.uploadedUrl : null;
+
+    // Validate required fields
+    if (!currentImage || !image) {
+        showModal('Validation Error', 'Please upload a photo or video and run analysis before submitting.', 'error');
+        return;
+    }
+
+    if (!location) {
+        showModal('Validation Error', 'Please provide a location for the report.', 'error');
+        return;
+    }
+
+    if (!street) {
+        showModal('Validation Error', 'Please provide the street/road name.', 'error');
+        return;
+    }
+
+    if (!description) {
+        showModal('Validation Error', 'Please provide a description of the pothole condition.', 'error');
+        return;
+    }
 
     if (!userId) {
         showModal('Error', 'User not logged in', 'error');
@@ -332,19 +373,29 @@ async function submitReport() {
     }
 
     try {
+        const reportPayload = {
+            userId: parseInt(userId),
+            location,
+            street,
+            description,
+            urgency,
+            phone: phone || null,
+            observations: observations || null,
+            count,
+            severity,
+            confidence,
+            image
+        };
+        
+        console.log('Submitting report with payload:', reportPayload); // DEBUG
+        console.log('Image URL being sent:', image); // DEBUG
+        
         const response = await fetch('http://localhost:3000/api/reports', {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json'
             },
-            body: JSON.stringify({
-                userId: parseInt(userId),
-                location,
-                count,
-                severity,
-                confidence,
-                image
-            })
+            body: JSON.stringify(reportPayload)
         });
 
         const result = await response.json();
@@ -356,6 +407,11 @@ async function submitReport() {
                 document.getElementById('previewContainer').classList.add('hidden');
                 document.getElementById('resultsContainer').classList.add('hidden');
                 document.getElementById('locationInput').value = '';
+                document.getElementById('streetInput').value = '';
+                document.getElementById('descriptionInput').value = '';
+                document.getElementById('urgencyInput').value = 'medium';
+                document.getElementById('phoneInput').value = '';
+                document.getElementById('observationsInput').value = '';
 
                 // Reload data
                 loadUserReports();
@@ -365,6 +421,7 @@ async function submitReport() {
             showModal('Error', result.message || 'Failed to submit report', 'error');
         }
     } catch (error) {
+        console.error('Submit error:', error); // DEBUG
         showModal('Error', 'Unable to connect to server. Please make sure the server is running.', 'error');
     }
 }
@@ -385,22 +442,33 @@ async function loadUserReports() {
                 return;
             }
 
-            reportsList.innerHTML = result.reports.map(report => `
+            console.log('Loaded reports:', result.reports); // DEBUG
+            
+            reportsList.innerHTML = result.reports.map(report => {
+                console.log(`Report #${report.id} - Image URL:`, report.image); // DEBUG
+                return `
                 <div class="report-card">
                     <div class="report-header">
                         <h4>Report #${report.id}</h4>
                         <span class="report-status ${report.status}">${report.status}</span>
                     </div>
                     <div class="report-details">
-                        <p><strong>Location:</strong> ${report.location}</p>
-                        <p><strong>Potholes:</strong> ${report.count}</p>
+                        <p><strong>Location:</strong> ${report.location}, ${report.street}</p>
+                        <p><strong>Description:</strong> ${report.description}</p>
+                        <p><strong>Potholes Detected:</strong> ${report.count}</p>
                         <p><strong>Severity:</strong> <span class="severity ${report.severity}">${report.severity}</span></p>
+                        <p><strong>Urgency:</strong> ${report.urgency}</p>
                         <p><strong>Confidence:</strong> ${report.confidence}%</p>
+                        ${report.observations ? `<p><strong>Observations:</strong> ${report.observations}</p>` : ''}
                         <p><strong>Date:</strong> ${new Date(report.createdAt).toLocaleDateString()}</p>
                     </div>
-                    ${report.image ? `<img src="${report.image}" alt="Report image" class="report-image">` : ''}
+                    ${report.image ? `
+                        <div style="width: 100%; border-radius: 10px; overflow: hidden; margin-top: 10px;">
+                            <img src="${report.image}" alt="Report image" class="report-image" style="width: 100%; height: 200px; object-fit: cover; display: block;">
+                        </div>
+                    ` : '<p style="color: #999; font-size: 0.9rem; margin-top: 10px;">No image attached</p>'}
                 </div>
-            `).join('');
+            `}).join('');
         }
     } catch (error) {
         console.error('Error loading reports:', error);

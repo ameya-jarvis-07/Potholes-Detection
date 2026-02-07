@@ -243,6 +243,7 @@ async function loadAllReports() {
         
         if (result.success) {
             allReports = result.reports;
+            console.log('Loaded admin reports:', result.reports); // DEBUG
             renderReportsTable(allReports);
             loadRecentActivity(allReports);
         }
@@ -347,8 +348,36 @@ function viewReport(reportId) {
     const report = allReports.find(r => r.id === reportId);
     
     if (report) {
-        const details = `ID: ${report.id}\nUser: ${report.userName}\nLocation: ${report.location}\nPotholes: ${report.count}\nSeverity: ${report.severity}\nConfidence: ${report.confidence}%\nStatus: ${report.status}\nDate: ${new Date(report.createdAt).toLocaleString()}`;
-        showModal('Report Details', details, 'info');
+        console.log('Viewing report:', report); // DEBUG
+        console.log('Image URL:', report.image); // DEBUG
+        
+        let details = `ID: ${report.id}
+User: ${report.userName}
+Email: ${report.userEmail}
+Phone: ${report.userPhone || 'N/A'}
+Location: ${report.location}
+Street/Road: ${report.street}
+Description: ${report.description}
+Potholes Detected: ${report.count}
+Severity: ${report.severity}
+Urgency: ${report.urgency}
+Confidence: ${report.confidence}%
+Status: ${report.status}
+Date: ${new Date(report.createdAt).toLocaleString()}`;
+        if (report.observations) {
+            details += `\nObservations: ${report.observations}`;
+        }
+        if (report.image) {
+            details += `\n\nImage: ${report.image}`;
+        }
+        
+        if (report.image) {
+            showConfirmModal('Report Details', details + '\n\nThis report includes media. Open media?', function() {
+                window.open(report.image, '_blank');
+            });
+        } else {
+            showModal('Report Details', details, 'info');
+        }
     }
 }
 
