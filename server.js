@@ -21,11 +21,11 @@ app.use(bodyParser.urlencoded({ extended: true, limit: '50mb' }));
 app.use((req, res, next) => {
     res.setHeader('Content-Security-Policy', [
         "default-src 'self'",
-        "script-src 'self' 'unsafe-inline' https://cdnjs.cloudflare.com",
-        "style-src 'self' 'unsafe-inline' https://cdnjs.cloudflare.com https://fonts.googleapis.com",
+        "script-src 'self' 'unsafe-inline' https://cdnjs.cloudflare.com https://unpkg.com",
+        "style-src 'self' 'unsafe-inline' https://cdnjs.cloudflare.com https://fonts.googleapis.com https://unpkg.com",
         "font-src 'self' https://fonts.gstatic.com https://cdnjs.cloudflare.com",
-        "img-src 'self' data: blob: https://res.cloudinary.com",
-        "connect-src 'self' http://localhost:3000 ws://localhost:3000",
+        "img-src 'self' data: blob: https://res.cloudinary.com https://*.locationiq.com https://*.tile.openstreetmap.org",
+        "connect-src 'self' http://localhost:3000 ws://localhost:3000 https://us1.locationiq.com https://*.locationiq.com",
         "frame-src 'none'",
         "object-src 'none'",
         "base-uri 'self'",
@@ -285,7 +285,10 @@ app.post('/api/admin/login', async (req, res) => {
 // Submit Pothole Report
 app.post('/api/reports', async (req, res) => {
     try {
-        const { userId, location, street, description, urgency, phone, observations, count, severity, confidence, image } = req.body;
+        const { userId, location, street, description, urgency, phone, observations, count, severity, confidence, image, latitude, longitude } = req.body;
+
+        console.log('📍 Backend received location:', location);
+        console.log('📍 Backend received coordinates:', { latitude, longitude });
 
         // Get user from Firebase
         const userDoc = await db.collection('users').doc(userId.toString()).get();
@@ -316,12 +319,17 @@ app.post('/api/reports', async (req, res) => {
             severity,
             confidence,
             image,
+            latitude: latitude || null,
+            longitude: longitude || null,
             status: 'pending',
             createdAt: new Date().toISOString(),
             updatedAt: new Date().toISOString()
         };
 
         await db.collection('reports').doc(nextId.toString()).set(newReport);
+
+        console.log('✅ Report saved to Firebase with location:', newReport.location);
+        console.log('✅ Report ID:', nextId);
 
         res.json({ success: true, message: 'Report submitted successfully', report: newReport });
     } catch (error) {

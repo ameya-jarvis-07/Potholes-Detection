@@ -6,6 +6,8 @@
     <title>Pothole Detection - User Dashboard</title>
     <link rel="stylesheet" href="style.css">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <!-- Leaflet CSS -->
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
 </head>
 <body>
     <nav class="navbar">
@@ -83,7 +85,15 @@
                         <div class="report-form">
                             <div class="form-group">
                                 <label for="locationInput">Location <span class="required">*</span></label>
-                                <input type="text" id="locationInput" placeholder="Enter general location or address" required>
+                                <div class="location-picker-wrapper">
+                                    <input type="text" id="locationInput" placeholder="Enter address or use map picker" required readonly>
+                                    <button type="button" onclick="openMapPicker()" class="map-picker-btn" title="Pick location on map">
+                                        <i class="fas fa-map-marker-alt"></i> Pick on Map
+                                    </button>
+                                </div>
+                                <small class="form-hint">Click "Pick on Map" to select exact coordinates</small>
+                                <input type="hidden" id="latitudeInput">
+                                <input type="hidden" id="longitudeInput">
                             </div>
                             <div class="form-group">
                                 <label for="streetInput">Street/Road Name <span class="required">*</span></label>
@@ -128,14 +138,18 @@
             <!-- Map Section -->
             <section id="mapSection" class="content-section">
                 <h2>Pothole Map</h2>
-                <div class="map-container">
-                    <div id="map" class="map-view">
-                        <p>Interactive map showing reported potholes in your area</p>
-                        <div class="map-placeholder">
-                            <i class="fas fa-map-marked-alt"></i>
-                            <p>Map integration placeholder</p>
-                        </div>
+                <div class="map-controls">
+                    <button onclick="refreshPotholeMap()" class="refresh-btn">
+                        <i class="fas fa-sync-alt"></i> Refresh Map
+                    </button>
+                    <div class="map-legend">
+                        <span><i class="fas fa-circle" style="color: #e74c3c;"></i> High Urgency</span>
+                        <span><i class="fas fa-circle" style="color: #f39c12;"></i> Medium</span>
+                        <span><i class="fas fa-circle" style="color: #3498db;"></i> Low</span>
                     </div>
+                </div>
+                <div class="map-container">
+                    <div id="potholeMap" style="height: 600px; border-radius: 8px;"></div>
                 </div>
             </section>
 
@@ -166,6 +180,60 @@
                 </div>
             </section>
         </main>
+    </div>
+    <!-- Photo Viewer Modal -->
+    <div id="photoViewerModal" class="modal">
+        <div class="modal-content photo-viewer-modal">
+            <div class="modal-header">
+                <i class="modal-icon fas fa-image"></i>
+                <h3>Pothole Photo</h3>
+                <button class="modal-close" onclick="closePhotoViewer()">&times;</button>
+            </div>
+            <div class="modal-body">
+                <img id="photoViewerImage" src="" alt="Pothole" style="width: 100%; height: auto; border-radius: 8px;">
+            </div>
+        </div>
+    </div>
+
+    <!-- Location Map Modal -->
+    <div id="locationMapModal" class="modal">
+        <div class="modal-content map-viewer-modal">
+            <div class="modal-header">
+                <i class="modal-icon fas fa-map-marked-alt"></i>
+                <h3>Pothole Location</h3>
+                <button class="modal-close" onclick="closeLocationMap()">&times;</button>
+            </div>
+            <div class="modal-body">
+                <div id="locationMapViewer" style="height: 500px; border-radius: 8px;"></div>
+            </div>
+        </div>
+    </div>
+    <!-- Map Picker Modal -->
+    <div id="mapPickerModal" class="modal">
+        <div class="modal-content map-picker-modal">
+            <div class="modal-header">
+                <i class="modal-icon fas fa-map-marked-alt"></i>
+                <h3>Pick Pothole Location</h3>
+                <button class="modal-close" onclick="closeMapPicker()">&times;</button>
+            </div>
+            <div class="modal-body">
+                <p class="map-instruction">
+                    <i class="fas fa-info-circle"></i> Click anywhere on the map to mark the pothole location. The address will be automatically filled.
+                </p>
+                <div id="mapPicker" style="height: 500px; border-radius: 8px; margin-top: 15px;"></div>
+                <div class="selected-location-info" id="selectedLocationInfo" style="display: none;">
+                    <h4><i class="fas fa-location-arrow"></i> Selected Location:</h4>
+                    <p id="selectedAddress">No location selected</p>
+                    <p><strong>Coordinates:</strong> <span id="selectedCoords">-</span></p>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button onclick="closeMapPicker()" class="modal-btn modal-btn-secondary">Cancel</button>
+                <button onclick="confirmLocation()" class="modal-btn modal-btn-primary" id="confirmLocationBtn" disabled>
+                    <i class="fas fa-check"></i> Confirm Location
+                </button>
+            </div>
+        </div>
     </div>
 
     <!-- Toast Container -->
@@ -204,6 +272,8 @@
         </div>
     </div>
 
+    <!-- Leaflet JavaScript -->
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
     <script src="dashboard.js"></script>
 </body>
 </html>

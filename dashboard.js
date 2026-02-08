@@ -2,6 +2,318 @@
 let currentImage = null;
 let detectionResults = null;
 
+// ==================== MAP CONFIGURATION ====================
+// Replace this with your LocationIQ API key
+const LOCATIONIQ_API_KEY = 'pk.17a66f28fd65481575ebcd156c8b09f0';
+
+// Map instances
+let mapPicker = null;
+let potholeMap = null;
+let selectedMarker = null;
+let selectedLocation = {
+    lat: null,
+    lng: null,
+    address: null
+};
+
+// Default map center (you can change this to your city/region)
+const DEFAULT_MAP_CENTER = [21.149619, 79.080760]; // New Delhi, India
+const DEFAULT_ZOOM = 13;
+
+// ==================== MAP PICKER FUNCTIONS ====================
+
+/**
+ * Opens the map picker modal for location selection
+ */
+function openMapPicker() {
+    const modal = document.getElementById('mapPickerModal');
+    modal.classList.add('show');
+    
+    // Initialize map picker if not already initialized
+    setTimeout(() => {
+        if (!mapPicker) {
+            initMapPicker();
+        } else {
+            mapPicker.invalidateSize(); // Refresh map size
+        }
+    }, 100);
+}
+
+/**
+ * Closes the map picker modal
+ */
+function closeMapPicker() {
+    const modal = document.getElementById('mapPickerModal');
+    modal.classList.remove('show');
+}
+
+/**
+ * Initializes the map picker with LocationIQ tiles
+ */
+function initMapPicker() {
+    // Check if API key is set
+    if (LOCATIONIQ_API_KEY === 'YOUR_LOCATIONIQ_API_KEY_HERE') {
+        showModal('API Key Required', 
+            'Please add your LocationIQ API key in dashboard.js. Get a free key at locationiq.com', 
+            'error');
+        closeMapPicker();
+        return;
+    }
+    
+    // Create map instance
+    mapPicker = L.map('mapPicker').setView(DEFAULT_MAP_CENTER, DEFAULT_ZOOM);
+    
+    // Add LocationIQ tile layer
+    L.tileLayer(`https://{s}-tiles.locationiq.com/v3/streets/r/{z}/{x}/{y}.png?key=${LOCATIONIQ_API_KEY}`, {
+        attribution: '&copy; <a href="https://locationiq.com">LocationIQ</a> | &copy; <a href="https://openstreetmap.org">OpenStreetMap</a>',
+        maxZoom: 19
+    }).addTo(mapPicker);
+    
+    // Try to get user's current location
+    if (navigator.geolocation) {
+        navigator.geolocation.getCurrentPosition(
+            (position) => {
+                const userLat = position.coords.latitude;
+                const userLng = position.coords.longitude;
+                mapPicker.setView([userLat, userLng], 15);
+                
+                // Add a blue marker for user's location
+                L.circleMarker([userLat, userLng], {
+                    radius: 8,
+                    fillColor: '#3498db',
+                    color: '#fff',
+                    weight: 2,
+                    opacity: 1,
+                    fillOpacity: 0.8
+                }).addTo(mapPicker)
+                  .bindPopup('<b>Your Location</b>')
+                  .openPopup();
+            },
+            (error) => {
+                console.log('Geolocation error:', error);
+                showToast('Could not get your location. Please click on map to select location.', 'info');
+            }
+        );
+    }
+    
+    // Add click event to select location
+    mapPicker.on('click', async function(e) {
+        const lat = e.latlng.lat;
+        const lng = e.latlng.lng;
+        
+        // Remove previous marker if exists
+        if (selectedMarker) {
+            mapPicker.removeLayer(selectedMarker);
+        }
+        
+        // Add new marker
+        selectedMarker = L.marker([lat, lng], {
+            icon: L.divIcon({
+                className: 'custom-marker high',
+                html: '<i class="fas fa-exclamation-triangle"></i>',
+                iconSize: [30, 30]
+            })
+        }).addTo(mapPicker);
+        
+        // Show loading state
+        document.getElementById('selectedLocationInfo').style.display = 'block';
+        document.getElementById('selectedAddress').innerHTML = '<i class="fas fa-spinner fa-spin"></i> Getting address...';
+        document.getElementById('selectedCoords').textContent = `${lat.toFixed(6)}, ${lng.toFixed(6)}`;
+        
+        // Perform reverse geocoding
+        const address = await reverseGeocode(lat, lng);
+        
+        // Store selected location
+        selectedLocation = {
+            lat: lat,
+            lng: lng,
+            address: address
+        };
+        
+        // Update UI
+        document.getElementById('selectedAddress').textContent = address;
+        document.getElementById('confirmLocationBtn').disabled = false;
+        
+        // Add popup to marker
+        selectedMarker.bindPopup(`<b>Selected Location</b><br>${address}`).openPopup();
+    });
+}
+
+/**
+ * Performs reverse geocoding using LocationIQ API
+ */
+async function reverseGeocode(lat, lng) {
+    try {
+        const response = await fetch(
+            `https://us1.locationiq.com/v1/reverse?key=${LOCATIONIQ_API_KEY}&lat=${lat}&lon=${lng}&format=json`
+        );
+        
+        if (!response.ok) {
+            throw new Error('Reverse geocoding failed');
+        }
+        
+        const data = await response.json();
+        
+        // Format address from the response
+        const address = data.display_name || `${lat.toFixed(6)}, ${lng.toFixed(6)}`;
+        
+        return address;
+    } catch (error) {
+        console.error('Reverse geocoding error:', error);
+        showToast('Could not get address. Please check your API key.', 'error');
+        return `Lat: ${lat.toFixed(6)}, Lng: ${lng.toFixed(6)}`;
+    }
+}
+
+/**
+ * Confirms the selected location and closes the modal
+ */
+function confirmLocation() {
+    if (!selectedLocation.lat || !selectedLocation.lng) {
+        showToast('Please select a location on the map first', 'warning');
+        return;
+    }
+    
+    // Fill the form fields
+    document.getElementById('locationInput').value = selectedLocation.address;
+    document.getElementById('latitudeInput').value = selectedLocation.lat;
+    document.getElementById('longitudeInput').value = selectedLocation.lng;
+    
+    // Log for debugging
+    console.log('✅ Location confirmed and set:', {
+        address: selectedLocation.address,
+        latitude: selectedLocation.lat,
+        longitude: selectedLocation.lng
+    });
+    
+    // Show success message
+    showToast('Location selected successfully!', 'success');
+    
+    // Close modal
+    closeMapPicker();
+    
+    // Reset for next use
+    document.getElementById('selectedLocationInfo').style.display = 'none';
+    document.getElementById('confirmLocationBtn').disabled = true;
+}
+
+// ==================== POTHOLE MAP FUNCTIONS ====================
+
+/**
+ * Initializes the pothole map in the Map section
+ */
+function initPotholeMap() {
+    // Check if API key is set
+    if (LOCATIONIQ_API_KEY === 'YOUR_LOCATIONIQ_API_KEY_HERE') {
+        document.getElementById('potholeMap').innerHTML = 
+            '<div style="padding: 40px; text-align: center; color: #e74c3c;"><i class="fas fa-exclamation-triangle" style="font-size: 48px; margin-bottom: 20px;"></i><p>Please add your LocationIQ API key in dashboard.js<br>Get a free key at <a href="https://locationiq.com" target="_blank">locationiq.com</a></p></div>';
+        return;
+    }
+    
+    // Create map instance
+    potholeMap = L.map('potholeMap').setView(DEFAULT_MAP_CENTER, DEFAULT_ZOOM);
+    
+    // Add LocationIQ tile layer
+    L.tileLayer(`https://{s}-tiles.locationiq.com/v3/streets/r/{z}/{x}/{y}.png?key=${LOCATIONIQ_API_KEY}`, {
+        attribution: '&copy; <a href="https://locationiq.com">LocationIQ</a> | &copy; <a href="https://openstreetmap.org">OpenStreetMap</a>',
+        maxZoom: 19
+    }).addTo(potholeMap);
+    
+    // Load and display potholes
+    loadPotholesOnMap();
+}
+
+/**
+ * Loads all pothole reports and displays them on the map
+ */
+async function loadPotholesOnMap() {
+    try {
+        const userId = sessionStorage.getItem('userId');
+        const response = await fetch(`http://localhost:3000/api/reports?userId=${userId}`);
+        
+        if (!response.ok) {
+            throw new Error('Failed to load reports');
+        }
+        
+        const result = await response.json();
+        
+        if (!result.success || !result.reports || result.reports.length === 0) {
+            // No reports to display
+            L.marker(DEFAULT_MAP_CENTER).addTo(potholeMap)
+                .bindPopup('<b>No potholes reported yet</b><br>Start by reporting your first pothole!')
+                .openPopup();
+            return;
+        }
+        
+        // Add markers for each pothole
+        const bounds = [];
+        
+        result.reports.forEach(report => {
+            // Only add if coordinates are available
+            if (report.latitude && report.longitude) {
+                const lat = parseFloat(report.latitude);
+                const lng = parseFloat(report.longitude);
+                
+                // Determine marker color based on urgency
+                const urgencyClass = report.urgency || 'medium';
+                
+                // Create custom marker
+                const marker = L.marker([lat, lng], {
+                    icon: L.divIcon({
+                        className: `custom-marker ${urgencyClass}`,
+                        html: '<i class="fas fa-exclamation-triangle"></i>',
+                        iconSize: [30, 30]
+                    })
+                }).addTo(potholeMap);
+                
+                // Create popup content
+                const popupContent = `
+                    <div class="pothole-popup">
+                        <h4><i class="fas fa-road"></i> Pothole Report</h4>
+                        <p><strong>Location:</strong> ${report.location || 'N/A'}</p>
+                        <p><strong>Street:</strong> ${report.street || 'N/A'}</p>
+                        <p><strong>Status:</strong> ${report.status || 'Pending'}</p>
+                        <p><strong>Reported:</strong> ${new Date(report.timestamp).toLocaleDateString()}</p>
+                        <span class="urgency-badge ${urgencyClass}">${urgencyClass} urgency</span>
+                    </div>
+                `;
+                
+                marker.bindPopup(popupContent);
+                
+                // Add to bounds
+                bounds.push([lat, lng]);
+            }
+        });
+        
+        // Fit map to show all markers
+        if (bounds.length > 0) {
+            potholeMap.fitBounds(bounds, { padding: [50, 50] });
+        }
+        
+    } catch (error) {
+        console.error('Error loading potholes on map:', error);
+        showToast('Error loading pothole locations', 'error');
+    }
+}
+
+/**
+ * Refreshes the pothole map
+ */
+function refreshPotholeMap() {
+    if (potholeMap) {
+        // Clear existing layers except the tile layer
+        potholeMap.eachLayer((layer) => {
+            if (layer instanceof L.Marker || layer instanceof L.CircleMarker) {
+                potholeMap.removeLayer(layer);
+            }
+        });
+        
+        // Reload potholes
+        loadPotholesOnMap();
+        showToast('Map refreshed!', 'success');
+    }
+}
+
 // Toggle Sidebar for Mobile
 function toggleSidebar() {
     const sidebar = document.querySelector('.sidebar');
@@ -209,6 +521,18 @@ function showSection(section) {
     // Add active to clicked menu item
     event.currentTarget.classList.add('active');
     
+    // Initialize map when map section is shown
+    if (section === 'map') {
+        setTimeout(() => {
+            if (!potholeMap) {
+                initPotholeMap();
+            } else {
+                potholeMap.invalidateSize(); // Refresh map size
+                refreshPotholeMap(); // Reload markers
+            }
+        }, 100);
+    }
+    
     // Close sidebar on mobile after selection
     const isMobile = window.innerWidth <= 768 || (window.innerWidth <= 1024 && window.innerHeight <= 768 && window.matchMedia('(orientation: landscape)').matches);
     if (isMobile) {
@@ -345,6 +669,10 @@ async function submitReport() {
     const severity = document.getElementById('severity').textContent;
     const confidence = parseInt(document.getElementById('confidence').textContent);
     const image = currentImage && currentImage.uploadedUrl ? currentImage.uploadedUrl : null;
+    
+    // Get coordinates from map picker
+    const latitude = document.getElementById('latitudeInput').value;
+    const longitude = document.getElementById('longitudeInput').value;
 
     // Validate required fields
     if (!currentImage || !image) {
@@ -353,7 +681,7 @@ async function submitReport() {
     }
 
     if (!location) {
-        showModal('Validation Error', 'Please provide a location for the report.', 'error');
+        showModal('Validation Error', 'Please provide a location for the report. Use the "Pick on Map" button.', 'error');
         return;
     }
 
@@ -384,11 +712,14 @@ async function submitReport() {
             count,
             severity,
             confidence,
-            image
+            image,
+            latitude: latitude || null,
+            longitude: longitude || null
         };
         
-        console.log('Submitting report with payload:', reportPayload); // DEBUG
-        console.log('Image URL being sent:', image); // DEBUG
+        console.log('📍 Location being submitted:', location); // DEBUG
+        console.log('📍 Coordinates being submitted:', { latitude, longitude }); // DEBUG
+        console.log('📦 Full report payload:', reportPayload); // DEBUG
         
         const response = await fetch('http://localhost:3000/api/reports', {
             method: 'POST',
@@ -407,6 +738,8 @@ async function submitReport() {
                 document.getElementById('previewContainer').classList.add('hidden');
                 document.getElementById('resultsContainer').classList.add('hidden');
                 document.getElementById('locationInput').value = '';
+                document.getElementById('latitudeInput').value = '';
+                document.getElementById('longitudeInput').value = '';
                 document.getElementById('streetInput').value = '';
                 document.getElementById('descriptionInput').value = '';
                 document.getElementById('urgencyInput').value = 'medium';
@@ -467,6 +800,18 @@ async function loadUserReports() {
                             <img src="${report.image}" alt="Report image" class="report-image" style="width: 100%; height: 200px; object-fit: cover; display: block;">
                         </div>
                     ` : '<p style="color: #999; font-size: 0.9rem; margin-top: 10px;">No image attached</p>'}
+                    <div class="report-actions" style="display: flex; gap: 10px; margin-top: 15px; flex-wrap: wrap;">
+                        ${report.image ? `
+                            <button onclick="showPhotoViewer('${report.image}')" class="action-btn photo-btn">
+                                <i class="fas fa-image"></i> Show Photo
+                            </button>
+                        ` : ''}
+                        ${report.latitude && report.longitude ? `
+                            <button onclick="showLocationMap(${report.latitude}, ${report.longitude}, '${report.location.replace(/'/g, "\\'")}')" class="action-btn map-btn">
+                                <i class="fas fa-map-marker-alt"></i> Show Map
+                            </button>
+                        ` : ''}
+                    </div>
                 </div>
             `}).join('');
         }
@@ -497,6 +842,101 @@ async function loadUserStats() {
         }
     } catch (error) {
         console.error('Error loading stats:', error);
+    }
+}
+
+// ==================== PHOTO VIEWER FUNCTIONS ====================
+
+let locationMapInstance = null;
+
+/**
+ * Shows photo in a modal viewer
+ */
+function showPhotoViewer(imageUrl) {
+    const modal = document.getElementById('photoViewerModal');
+    const image = document.getElementById('photoViewerImage');
+    
+    image.src = imageUrl;
+    modal.classList.add('show');
+    
+    // Close on background click
+    modal.onclick = function(e) {
+        if (e.target === modal) {
+            closePhotoViewer();
+        }
+    };
+}
+
+/**
+ * Closes the photo viewer modal
+ */
+function closePhotoViewer() {
+    const modal = document.getElementById('photoViewerModal');
+    modal.classList.remove('show');
+    modal.onclick = null;
+}
+
+/**
+ * Shows location on a map in modal
+ */
+function showLocationMap(lat, lng, address) {
+    const modal = document.getElementById('locationMapModal');
+    modal.classList.add('show');
+    
+    // Close on background click
+    modal.onclick = function(e) {
+        if (e.target === modal) {
+            closeLocationMap();
+        }
+    };
+    
+    // Initialize map after modal is shown
+    setTimeout(() => {
+        if (locationMapInstance) {
+            locationMapInstance.remove();
+        }
+        
+        // Check if API key is set
+        if (LOCATIONIQ_API_KEY === 'YOUR_LOCATIONIQ_API_KEY_HERE') {
+            document.getElementById('locationMapViewer').innerHTML = 
+                '<div style="padding: 40px; text-align: center; color: #e74c3c;"><i class="fas fa-exclamation-triangle" style="font-size: 48px; margin-bottom: 20px;"></i><p>Please add your LocationIQ API key in dashboard.js</p></div>';
+            return;
+        }
+        
+        // Create map instance
+        locationMapInstance = L.map('locationMapViewer').setView([lat, lng], 16);
+        
+        // Add LocationIQ tile layer
+        L.tileLayer(`https://{s}-tiles.locationiq.com/v3/streets/r/{z}/{x}/{y}.png?key=${LOCATIONIQ_API_KEY}`, {
+            attribution: '&copy; <a href="https://locationiq.com">LocationIQ</a> | &copy; <a href="https://openstreetmap.org">OpenStreetMap</a>',
+            maxZoom: 19
+        }).addTo(locationMapInstance);
+        
+        // Add marker for the pothole location
+        L.marker([lat, lng], {
+            icon: L.divIcon({
+                className: 'custom-marker high',
+                html: '<i class="fas fa-exclamation-triangle"></i>',
+                iconSize: [30, 30]
+            })
+        }).addTo(locationMapInstance)
+          .bindPopup(`<b>Pothole Location</b><br>${address}`)
+          .openPopup();
+    }, 100);
+}
+
+/**
+ * Closes the location map modal
+ */
+function closeLocationMap() {
+    const modal = document.getElementById('locationMapModal');
+    modal.classList.remove('show');
+    modal.onclick = null;
+    
+    // Destroy map instance
+    if (locationMapInstance) {
+        locationMapInstance.remove();
+        locationMapInstance = null;
     }
 }
 

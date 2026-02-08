@@ -6,6 +6,8 @@
     <title>Admin Panel - Pothole Detection System</title>
     <link rel="stylesheet" href="style.css">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <!-- Leaflet CSS -->
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
 </head>
 <body>
     <nav class="navbar">
@@ -220,6 +222,51 @@
     <!-- Toast Container -->
     <div id="toastContainer" class="toast-container"></div>
 
+    <!-- Photo Viewer Modal -->
+    <div id="photoViewerModal" class="modal">
+        <div class="modal-content photo-viewer-modal">
+            <div class="modal-header">
+                <i class="modal-icon fas fa-image"></i>
+                <h3>Pothole Photo</h3>
+                <button class="modal-close" onclick="closePhotoViewer()">&times;</button>
+            </div>
+            <div class="modal-body">
+                <img id="photoViewerImage" src="" alt="Pothole" style="width: 100%; height: auto; border-radius: 8px;">
+            </div>
+        </div>
+    </div>
+
+    <!-- Location Map Modal -->
+    <div id="locationMapModal" class="modal">
+        <div class="modal-content map-viewer-modal">
+            <div class="modal-header">
+                <i class="modal-icon fas fa-map-marked-alt"></i>
+                <h3>Pothole Location</h3>
+                <button class="modal-close" onclick="closeLocationMap()">&times;</button>
+            </div>
+            <div class="modal-body">
+                <div id="locationMapViewer" style="height: 500px; border-radius: 8px;"></div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Report Detail Modal -->
+    <div id="reportDetailModal" class="modal">
+        <div class="modal-content report-detail-modal">
+            <div class="modal-header">
+                <i class="modal-icon fas fa-file-alt"></i>
+                <h3 id="reportDetailTitle">Report Details</h3>
+                <button class="modal-close" onclick="closeReportDetail()">&times;</button>
+            </div>
+            <div class="modal-body" id="reportDetailBody">
+                <!-- Report details will be loaded here -->
+            </div>
+            <div class="modal-footer">
+                <button onclick="closeReportDetail()" class="modal-btn modal-btn-secondary">Close</button>
+            </div>
+        </div>
+    </div>
+
     <!-- Modal Popups -->
     <div id="messageModal" class="modal">
         <div class="modal-content">
@@ -252,6 +299,8 @@
         </div>
     </div>
 
+    <!-- Leaflet JavaScript -->
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
     <script src="admin.js"></script>
 </body>
 </html>
